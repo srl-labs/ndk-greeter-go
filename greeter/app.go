@@ -112,6 +112,7 @@ func (a *App) Start(ctx context.Context) {
 			a.handleConfigNotifications(ctx, cfgStreamResp)
 
 		case <-ctx.Done():
+			a.logger.Info().Msg("Got a signal to exit, bye!")
 			return
 		}
 	}

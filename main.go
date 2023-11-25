@@ -5,6 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/rs/zerolog"
 	"github.com/srl-labs/ndk-greeter-go/greeter"
@@ -36,7 +38,22 @@ func main() {
 	defer cancel()
 
 	app := greeter.NewApp(ctx, &logger)
+	exitHandler(cancel)
 
 	ctx = metadata.AppendToOutgoingContext(ctx, "agent_name", greeter.AppName)
 	app.Start(ctx)
+
+	os.Exit(0)
+}
+
+// ExitHandler cancels the main context when interrupt or term signals are sent.
+func exitHandler(cancel context.CancelFunc) {
+	// handle CTRL-C signal
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-sig
+
+		cancel()
+	}()
 }
