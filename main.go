@@ -38,12 +38,12 @@ func main() {
 	defer cancel()
 
 	app := greeter.NewApp(ctx, &logger)
+
 	exitHandler(cancel)
 
 	ctx = metadata.AppendToOutgoingContext(ctx, "agent_name", greeter.AppName)
-	app.Start(ctx)
 
-	os.Exit(0)
+	app.Start(ctx)
 }
 
 // ExitHandler cancels the main context when interrupt or term signals are sent.

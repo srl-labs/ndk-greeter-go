@@ -30,7 +30,7 @@ type App struct {
 	logger       *zerolog.Logger
 	retryTimeout time.Duration
 
-	target *target.Target
+	gNMITarget *target.Target
 
 	// NDK Service clients
 	SDKMgrServiceClient       ndk.SdkMgrServiceClient
@@ -86,7 +86,7 @@ func NewApp(ctx context.Context, logger *zerolog.Logger) *App {
 		retryTimeout: 5 * time.Second,
 		gRPCConn:     conn,
 
-		target: target,
+		gNMITarget: target,
 
 		SDKMgrServiceClient:       sdkMgrClient,
 		NotificationServiceClient: notifSvcClient,
@@ -158,7 +158,7 @@ func (a *App) getUptime(ctx context.Context) (string, error) {
 		return "", err
 	}
 
-	getResp, err := a.target.Get(ctx, getReq)
+	getResp, err := a.gNMITarget.Get(ctx, getReq)
 	if err != nil {
 		return "", err
 	}
