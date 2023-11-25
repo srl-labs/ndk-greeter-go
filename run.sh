@@ -10,6 +10,9 @@ BINARY=$(pwd)/build/${APPNAME}
 LABDIR=./lab
 LABFILE=${APPNAME}.clab.yml
 
+
+LDFLAGS="-s -w -X main.version=dev -X main.commit=$(git rev-parse --short HEAD)"
+
 #################################
 # Build functions
 #################################
@@ -54,7 +57,7 @@ function build-app {
     echo "Building application"
     mkdir -p ${BIN_DIR}
     go mod tidy
-    go build -o ${BINARY} -ldflags="-s -w" .
+    go build -o ${BINARY} -ldflags="${LDFLAGS}" .
 }
 
 #################################

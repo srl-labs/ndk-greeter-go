@@ -15,7 +15,11 @@ import (
 
 const (
 	logTimeFormat = "2006-01-02 15:04:05 MST"
-	version       = "0.1.0"
+)
+
+var (
+	version = "0.0.0"
+	commit  = ""
 )
 
 func main() {
@@ -23,7 +27,7 @@ func main() {
 	flag.Parse()
 
 	if *versionFlag {
-		fmt.Println(version)
+		fmt.Println(version + "-" + commit)
 		os.Exit(0)
 	}
 
