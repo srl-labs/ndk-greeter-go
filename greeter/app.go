@@ -144,6 +144,11 @@ func (a *App) stop() {
 		a.logger.Error().Err(err).Msg("Closing gRPC connection to NDK server failed")
 	}
 
+	err = a.gNMITarget.Close()
+	if err != nil {
+		a.logger.Error().Err(err).Msg("Closing gNMI connection failed")
+	}
+
 	a.logger.Info().Msg("Greeter unregistered successfully!")
 }
 
