@@ -139,6 +139,11 @@ func (a *App) stop() {
 		return
 	}
 
+	err = a.gRPCConn.Close()
+	if err != nil {
+		a.logger.Error().Err(err).Msg("Closing gRPC connection to NDK server failed")
+	}
+
 	a.logger.Info().Msg("Greeter unregistered successfully!")
 }
 
