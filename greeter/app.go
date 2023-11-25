@@ -96,6 +96,7 @@ func NewApp(ctx context.Context, logger *zerolog.Logger) *App {
 
 func (a *App) Start(ctx context.Context) {
 	configStream := a.StartConfigNotificationStream(ctx)
+
 	for {
 		select {
 		case cfgStreamResp := <-configStream:

@@ -13,6 +13,7 @@ const (
 	greeterKeyPath   = ".greeter"
 )
 
+// ConfigState holds the application configuration and state.
 type ConfigState struct {
 	// Name is the name to use in the greeting.
 	Name string `json:"name"`
@@ -21,26 +22,7 @@ type ConfigState struct {
 }
 
 func (a *App) handleConfigNotifications(ctx context.Context, notifStreamResp *ndk.NotificationStreamResponse) {
-	// buf holds the configuration notifications received before commit end.
-	buf := make([]*ndk.ConfigNotification, 0)
-
-	for _, n := range notifStreamResp.GetNotification() {
-		cfgNotif := n.GetConfig()
-		if cfgNotif == nil {
-			a.logger.Info().
-				Msgf("Empty configuration notification:%+v", n)
-			continue
-		}
-
-		// store config notification in buffer
-		if cfgNotif.Key.JsPath != commitEndKeyPath {
-			a.logger.Info().
-				Msgf("Storing config notification in buffer:%+v", cfgNotif)
-
-			buf = append(buf, cfgNotif)
-			continue
-		}
-	}
+	buf := a.bufferConfigNotifications(notifStreamResp)
 
 	// commit end notification received
 	// process config buffer
@@ -77,4 +59,32 @@ func (a *App) handleGreeterCreateOrUpdate(ctx context.Context, data *ndk.ConfigD
 		a.logger.Error().Msgf("failed to unmarshal path %q config %+v", ".greeter", data)
 		return
 	}
+}
+
+// bufferConfigNotifications buffers the configuration notifications received
+// from the config notification stream before commit end notification is received.
+func (a *App) bufferConfigNotifications(notifStreamResp *ndk.NotificationStreamResponse) []*ndk.ConfigNotification {
+	notifs := notifStreamResp.GetNotification()
+	// buf holds the configuration notifications received before commit end.
+	buf := make([]*ndk.ConfigNotification, 0, len(notifs))
+
+	for _, n := range notifs {
+		cfgNotif := n.GetConfig()
+		if cfgNotif == nil {
+			a.logger.Info().
+				Msgf("Empty configuration notification:%+v", n)
+			continue
+		}
+
+		// do not include commit end notification in the buffer
+		// as it is just an indication that the config is passed in full.
+		if cfgNotif.Key.JsPath != commitEndKeyPath {
+			a.logger.Info().
+				Msgf("Storing config notification in buffer:%+v", cfgNotif)
+
+			buf = append(buf, cfgNotif)
+		}
+	}
+
+	return buf
 }
