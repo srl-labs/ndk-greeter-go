@@ -1,0 +1,13 @@
+name: greeter
+prefix: __lab-name
+
+topology:
+  nodes:
+    srl:
+      kind: nokia_srlinux
+      image: ghcr.io/nokia/srlinux:23.10.1
+      binds:
+        - ../build:/tmp/build # mount app binary
+        - ../greeter.yml:/tmp/greeter.yml # agent config file to appmgr directory
+        - ../yang:/opt/greeter/yang # yang modules
+        - ../logs/srl1:/var/log/srlinux # expose srlinux logs to a dev machine

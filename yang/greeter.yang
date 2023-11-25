@@ -1,0 +1,24 @@
+module greeter {
+    yang-version 1.1;
+    namespace "example.com/greeter";
+    prefix "srl-labs-greeter";
+
+    description
+        "greeter YANG module";
+
+    revision "2023-11-21" {
+        description
+            "initial release";
+    }
+
+    container greeter {
+        leaf name {
+            type string;
+        }
+
+        leaf greeting {
+            type string;
+            config false;
+        }
+    }
+}
