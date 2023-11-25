@@ -87,7 +87,7 @@ function build-restart-app {
 # Lab functions
 #################################
 function deploy-lab {
-    mkdir -p logs/srl1
+    mkdir -p logs/srl
     sudo clab dep -c -t ${LABDIR}
 }
 
