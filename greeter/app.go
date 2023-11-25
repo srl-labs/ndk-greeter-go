@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/encoding/prototext"
 )
 
@@ -65,9 +66,10 @@ func NewApp(ctx context.Context, logger *zerolog.Logger) *App {
 	// register agent
 	// http://learn.srlinux.dev/ndk/guide/dev/go/#register-the-agent-with-the-ndk-manager
 	r, err := sdkMgrClient.AgentRegister(ctx, &ndk.AgentRegistrationRequest{})
-	if err != nil {
+	if err != nil || r.Status != ndk.SdkMgrStatus_kSdkMgrSuccess {
 		logger.Fatal().
 			Err(err).
+			Str("status", r.GetStatus().String()).
 			Msg("Agent registration failed")
 	}
 
@@ -113,10 +115,31 @@ func (a *App) Start(ctx context.Context) {
 			a.handleConfigNotifications(ctx, cfgStreamResp)
 
 		case <-ctx.Done():
-			a.logger.Info().Msg("Got a signal to exit, bye!")
+			a.stop()
 			return
 		}
 	}
+}
+
+func (a *App) stop() {
+	a.logger.Info().Msg("Got a signal to exit, unregistering greeter agent, bye!")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx = metadata.AppendToOutgoingContext(ctx, "agent_name", AppName)
+	defer cancel()
+
+	// unregister agent
+	r, err := a.SDKMgrServiceClient.AgentUnRegister(ctx, &ndk.AgentRegistrationRequest{})
+	if err != nil || r.Status != ndk.SdkMgrStatus_kSdkMgrSuccess {
+		a.logger.Error().
+			Err(err).
+			Str("status", r.GetStatus().String()).
+			Msgf("Agent unregistration failed %s", r.GetErrorStr())
+
+		return
+	}
+
+	a.logger.Info().Msg("Greeter unregistered successfully!")
 }
 
 // connect attempts connecting to the NDK socket with backoff and retry.

@@ -36,12 +36,11 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	ctx = metadata.AppendToOutgoingContext(ctx, "agent_name", greeter.AppName)
 
 	app := greeter.NewApp(ctx, &logger)
 
 	exitHandler(cancel)
-
-	ctx = metadata.AppendToOutgoingContext(ctx, "agent_name", greeter.AppName)
 
 	app.Start(ctx)
 }
