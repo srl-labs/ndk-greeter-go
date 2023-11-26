@@ -145,6 +145,26 @@ function reload-app_mgr {
     sudo clab exec --label containerlab=greeter --cmd "sr_cli tools system app-management application app_mgr reload"
 }
 
+#################################
+# Packaging functions
+#################################
+function compress-bin {
+    rm -f build/compressed
+    chmod 777 build/${APPNAME}
+	docker run --rm -v $(pwd):/work ghcr.io/hellt/upx:4.0.2-r0 --best --lzma -o build/compressed build/${APPNAME}
+	mv build/compressed build/${APPNAME}
+}
+
+# package packages the binary into a deb package by default
+# if `rpm` is passed as an argument, it will create an rpm package
+function package {
+    local packager=${1:-deb}
+	docker run --rm -v $(pwd):/tmp -w /tmp goreleaser/nfpm package \
+	--config /tmp/nfpm.yml \
+	--target /tmp/build \
+	--packager ${packager}
+}
+
 function help {
   printf "%s <task> [args]\n\nTasks:\n" "${0}"
 

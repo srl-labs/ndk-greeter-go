@@ -63,7 +63,6 @@ func setupLogger() zerolog.Logger {
 	// log to console as well.
 	_, err := os.Stat("/tmp/.ndk-dev-mode")
 	if err == nil {
-		fmt.Println("here1")
 		const logTimeFormat = "2006-01-02 15:04:05 MST"
 
 		consoleLogger := zerolog.ConsoleWriter{

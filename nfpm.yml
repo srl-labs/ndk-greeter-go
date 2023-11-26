@@ -1,10 +1,10 @@
-name: "greeter" # name of the go package
+name: "ndk-greeter-go" # name of the go package
 arch: "amd64" # architecture you are using
-version: "v0.1.0" # version of this rpm package
-maintainer: "John Doe <john@doe.com>"
-description: "greeter NDK agent" # description of a package
-vendor: "JD Corp" # optional information about the creator of the package
-license: "BSD-3-Clause"
+version: "0.0.0-dev" # version of this rpm package
+maintainer: "Roman Dodin <roman@dodin.dev>"
+description: "Greeter NDK application" # description of a package
+vendor: "Nokia" # optional information about the creator of the package
+license: "Apache-2.0" # license of the package
 contents: # contents to add to the package
   - src: "./build/greeter" # local path of agent binary
     dst: "/usr/local/bin/greeter" # destination path of agent binary
