@@ -14,7 +14,7 @@ func (a *App) updateGreeterState(ctx context.Context) {
 		return
 	}
 
-	a.ConfigState.Greeting = "👋 Hello " + a.ConfigState.Name + ", I was last booted at " + uptime
+	a.ConfigState.Greeting = "👋 Hello " + a.ConfigState.Name + ", SR Linux was last booted at " + uptime
 
 	jsData, err := json.Marshal(a.ConfigState)
 	if err != nil {

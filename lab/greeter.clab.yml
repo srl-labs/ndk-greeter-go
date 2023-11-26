@@ -1,9 +1,9 @@
 name: greeter
-prefix: __lab-name
+prefix: ""
 
 topology:
   nodes:
-    srl:
+    greeter:
       kind: nokia_srlinux
       image: ghcr.io/nokia/srlinux:23.10.1
       exec:

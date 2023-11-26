@@ -1,40 +1,30 @@
 # Greeter App in Go
 
-Greeter is a demo app written in Go to demonstrate the process of building applications powered by the SR Linux's [NetOps Development Kit](https://learn.srlinux.dev/ndk/). Check [learn.srlinux.dev](https://learn.srlinux.dev/ndk/guide/env/go/) for a complete documentation about the whole process.
+Greeter is a demo Go application demonstrating the key principles of creating applications powered by the SR Linux's [NetOps Development Kit](https://learn.srlinux.dev/ndk/). Check [learn.srlinux.dev](https://learn.srlinux.dev/ndk/guide/env/go/) for a complete code walkthrough.
 
 ## Quickstart
 
-Create an empty directory, change into it and execute:
+Clone and enter the repository:
 
-```
-curl -L https://github.com/srl-labs/ndk-dev-environment/archive/refs/heads/go.tar.gz | \
-    tar -xz --strip-components=1
-```
-
-This command will download the contents of the `go` branch.
-
-Initialize the NDK project providing the desired app name:
-
-```
-make APPNAME=my-cool-app
+```bash
+git clone https://github.com/srl-labs/ndk-greeter-go.git && \
+cd ndk-greeter-go
 ```
 
-Now you have all the components of an NDK app generated.
-
-Build the lab and deploy the demo application:
+Build the application and deploy it to the lab:
 
 ```
-make redeploy-all
+./run.sh deploy-all
 ```
 
-The app named `my-cool-app` is now running on `srl1` you can explore the log of the app by reading the log file:
+Once the lab is deployed, the application is automatically onboarded to SR Linux.
+
+Enter the SR Linux CLI:
 
 ```
-tail -f logs/srl1/stdout/my-cool-app.log
+ssh greeter
 ```
 
-Do modifications to your app and re-build the app with:
+Configure the name of the person to greet:
 
-```
-make build-restart
 ```
