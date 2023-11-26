@@ -25,6 +25,33 @@ Enter the SR Linux CLI:
 ssh greeter
 ```
 
-Configure the name of the person to greet:
+Once entered into the SR Linux CLI, you can finde `/greeter` context available that contains the application's configuration and operational data.
 
+Configure the desired name:
+
+```
+--{ + running }--[  ]--
+A:greeter# enter candidate
+
+--{ + candidate shared default }--[  ]--
+A:greeter# greeter name srlinux-user
+```
+
+Commit the configuration:
+
+```
+--{ +* candidate shared default }--[  ]--
+A:greeter# commit now
+All changes have been committed. Leaving candidate mode.
+```
+
+The application will now greet you when you list its operational state:
+
+```
+--{ + running }--[  ]--
+A:greeter# info from state greeter
+    greeter {
+        name srlinux-user
+        greeting "👋 Hello srlinux-user, I was last booted at 2023-11-26T10:24:27.374Z"
+    }
 ```
