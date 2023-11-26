@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	ndkSocket            = "localhost:50053"
+	ndkSocket            = "unix:///opt/srlinux/var/run/sr_sdk_service_manager:50053"
 	grpcServerUnixSocket = "unix:///opt/srlinux/var/run/sr_gnmi_server"
 	AppName              = "greeter"
 )
