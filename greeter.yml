@@ -2,11 +2,12 @@
 # for a complete list of parameters check https://learn.srlinux.dev/ndk/guide/agent/#configuration-file
 greeter:
   path: /usr/local/bin
-  launch-command: /usr/local/bin/greeter
-  version-command: /usr/local/bin/greeter --version
+  launch-command: greeter
+  version-command: greeter --version
   failure-action: wait=10
   config-delivery-format: json
   yang-modules:
-    names: ["greeter"]
+    names:
+      - greeter
     source-directories:
-      - "/opt/greeter/yang"
+      - /opt/greeter/yang
