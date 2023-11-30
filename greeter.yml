@@ -1,5 +1,7 @@
 # greeter agent configuration file
-# for a complete list of parameters check https://learn.srlinux.dev/ndk/guide/agent/#configuration-file
+# for a complete list of parameters go to
+# http://learn.srlinux.dev/ndk/guide/agent/#application-manager-and-application-configuration-file
+# --8<-- [start:snip]
 greeter:
   path: /usr/local/bin
   launch-command: greeter
@@ -11,3 +13,4 @@ greeter:
       - greeter
     source-directories:
       - /opt/greeter/yang
+# --8<-- [start:end]
