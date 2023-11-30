@@ -20,6 +20,8 @@ var (
 	commit  = ""
 )
 
+// Main entry point for the application.
+// --8<-- [start:main]
 func main() {
 	versionFlag := flag.Bool("version", false, "print the version and exit")
 
@@ -42,6 +44,8 @@ func main() {
 
 	app.Start(ctx)
 }
+
+// --8<-- [end:main]
 
 // ExitHandler cancels the main context when interrupt or term signals are sent.
 func exitHandler(cancel context.CancelFunc) {
