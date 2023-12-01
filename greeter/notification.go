@@ -17,25 +17,11 @@ func (a *App) StartConfigNotificationStream(ctx context.Context) chan *ndk.Notif
 		Uint64("stream-id", streamID).
 		Msg("Notification stream created")
 
-	// create notification register request for Config service
-	// using acquired stream ID
-	notificationRegisterRequest := &ndk.NotificationRegisterRequest{
-		Op:       ndk.NotificationRegisterRequest_AddSubscription,
-		StreamId: streamID,
-		SubscriptionTypes: &ndk.NotificationRegisterRequest_Config{ // config service
-			Config: &ndk.ConfigSubscriptionRequest{},
-		},
-	}
-
-	registerResponse, err := a.SDKMgrServiceClient.NotificationRegister(ctx, notificationRegisterRequest)
-	if err != nil || registerResponse.GetStatus() != ndk.SdkMgrStatus_kSdkMgrSuccess {
-		a.logger.Printf("agent %s failed registering to notification with req=%+v: %v",
-			a.Name, notificationRegisterRequest, err)
-	}
+	a.addConfigSubscription(ctx, streamID)
 
 	streamChan := make(chan *ndk.NotificationStreamResponse)
 	go a.startNotificationStream(ctx, streamID,
-		subscriptionTypeName(notificationRegisterRequest), streamChan)
+		"config", streamChan)
 
 	return streamChan
 }
@@ -114,31 +100,6 @@ func (a *App) startNotificationStream(ctx context.Context,
 
 // --8<-- [end:start-notif-stream]
 
-// subscriptionTypeName returns the name of the service enclosed in a passed NotificationRegisterRequest.
-func subscriptionTypeName(r *ndk.NotificationRegisterRequest) string {
-	var sType string
-	switch r.GetSubscriptionTypes().(type) {
-	case *ndk.NotificationRegisterRequest_Config:
-		sType = "config"
-	case *ndk.NotificationRegisterRequest_Appid:
-		sType = "app id"
-	case *ndk.NotificationRegisterRequest_Route:
-		sType = "route"
-	case *ndk.NotificationRegisterRequest_BfdSession:
-		sType = "bfd"
-	case *ndk.NotificationRegisterRequest_Intf:
-		sType = "interface"
-	case *ndk.NotificationRegisterRequest_LldpNeighbor:
-		sType = "lldp"
-	case *ndk.NotificationRegisterRequest_Nhg:
-		sType = "next-hop group"
-	case *ndk.NotificationRegisterRequest_NwInst:
-		sType = "network instance"
-	}
-
-	return sType
-}
-
 // getNotificationStreamClient acquires the notification stream client that is used to receive
 // streamed notifications.
 // --8<-- [start:stream-client].
@@ -164,3 +125,21 @@ func (a *App) getNotificationStreamClient(ctx context.Context, streamID uint64) 
 }
 
 // --8<-- [end:stream-client]
+
+func (a *App) addConfigSubscription(ctx context.Context, streamID uint64) {
+	// create notification register request for Config service
+	// using acquired stream ID
+	notificationRegisterReq := &ndk.NotificationRegisterRequest{
+		Op:       ndk.NotificationRegisterRequest_AddSubscription,
+		StreamId: streamID,
+		SubscriptionTypes: &ndk.NotificationRegisterRequest_Config{ // config service
+			Config: &ndk.ConfigSubscriptionRequest{},
+		},
+	}
+
+	registerResp, err := a.SDKMgrServiceClient.NotificationRegister(ctx, notificationRegisterReq)
+	if err != nil || registerResp.GetStatus() != ndk.SdkMgrStatus_kSdkMgrSuccess {
+		a.logger.Printf("agent %s failed registering to notification with req=%+v: %v",
+			a.Name, notificationRegisterReq, err)
+	}
+}
