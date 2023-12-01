@@ -1,4 +1,7 @@
+// --8<-- [start:pkg-greeter]
 package greeter
+
+// --8<-- [end:pkg-greeter]
 
 import (
 	"context"
@@ -14,12 +17,17 @@ import (
 	"google.golang.org/protobuf/encoding/prototext"
 )
 
+// --8<-- [start:pkg-greeter-const].
 const (
 	ndkSocket            = "unix:///opt/srlinux/var/run/sr_sdk_service_manager:50053"
 	grpcServerUnixSocket = "unix:///opt/srlinux/var/run/sr_gnmi_server"
 	AppName              = "greeter"
 )
 
+// --8<-- [end:pkg-greeter-const]
+
+// App is the greeter application struct.
+// --8<-- [start:app-struct].
 type App struct {
 	Name  string // Agent name
 	AppID uint32
@@ -39,8 +47,11 @@ type App struct {
 	TelemetryServiceClient    ndk.SdkMgrTelemetryServiceClient
 }
 
+// --8<-- [end:app-struct]
+
 // NewApp creates a new Greeter App instance and connects to NDK socket.
 // It also creates the NDK service clients and registers the agent with NDK.
+// --8<-- [start:new-app].
 func NewApp(ctx context.Context, logger *zerolog.Logger) *App {
 	// connect to NDK socket
 	conn, err := connect(ctx, ndkSocket)
@@ -50,21 +61,23 @@ func NewApp(ctx context.Context, logger *zerolog.Logger) *App {
 			Msg("gRPC connect failed")
 	}
 
-	// create SDK Manager Client
+	// --8<-- [start:create-ndk-clients]
 	sdkMgrClient := ndk.NewSdkMgrServiceClient(conn)
-	// create Notification Service Client
 	notifSvcClient := ndk.NewSdkNotificationServiceClient(conn)
-	// create Telemetry Service Client
 	telemetrySvcClient := ndk.NewSdkMgrTelemetryServiceClient(conn)
+	// --8<-- [end:create-ndk-clients]
 
+	// --8<-- [start:create-gnmi-target]
 	logger.Info().Msg("creating gNMI Client")
 	target, err := newGNMITarget(ctx)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("gNMI target creation failed")
 	}
+	// --8<-- [end:create-gnmi-target]
 
 	// register agent
 	// http://learn.srlinux.dev/ndk/guide/dev/go/#register-the-agent-with-the-ndk-manager
+	// --8<-- [start:register-agent]
 	r, err := sdkMgrClient.AgentRegister(ctx, &ndk.AgentRegistrationRequest{})
 	if err != nil || r.Status != ndk.SdkMgrStatus_kSdkMgrSuccess {
 		logger.Fatal().
@@ -72,15 +85,17 @@ func NewApp(ctx context.Context, logger *zerolog.Logger) *App {
 			Str("status", r.GetStatus().String()).
 			Msg("Agent registration failed")
 	}
+	// --8<-- [end:register-agent]
 
 	logger.Info().
 		Uint32("app-id", r.GetAppId()).
 		Str("name", AppName).
 		Msg("Application registered successfully!")
 
+	// --8<-- [start:return-app]
 	return &App{
 		Name:  AppName,
-		AppID: r.GetAppId(),
+		AppID: r.GetAppId(), //(1)!
 
 		ConfigState: &ConfigState{},
 
@@ -94,8 +109,13 @@ func NewApp(ctx context.Context, logger *zerolog.Logger) *App {
 		NotificationServiceClient: notifSvcClient,
 		TelemetryServiceClient:    telemetrySvcClient,
 	}
+	// --8<-- [end:return-app]
 }
 
+// --8<-- [end:new-app]
+
+// Start starts the application.
+// --8<-- [start:app-start].
 func (a *App) Start(ctx context.Context) {
 	configStream := a.StartConfigNotificationStream(ctx)
 
@@ -121,6 +141,10 @@ func (a *App) Start(ctx context.Context) {
 	}
 }
 
+// --8<-- [end:app-start]
+
+// stop exits the application gracefully.
+// --8<-- [start:app-stop].
 func (a *App) stop() {
 	a.logger.Info().Msg("Got a signal to exit, unregistering greeter agent, bye!")
 
@@ -152,8 +176,11 @@ func (a *App) stop() {
 	a.logger.Info().Msg("Greeter unregistered successfully!")
 }
 
+// --8<-- [end:app-stop]
+
 // connect attempts connecting to the NDK socket with backoff and retry.
 // https://learn.srlinux.dev/ndk/guide/dev/go/#establish-grpc-channel-with-ndk-manager-and-instantiate-an-ndk-client
+// --8<-- [start:connect].
 func connect(ctx context.Context, socket string) (*grpc.ClientConn, error) {
 	conn, err := grpc.Dial(ndkSocket,
 		grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -161,6 +188,10 @@ func connect(ctx context.Context, socket string) (*grpc.ClientConn, error) {
 	return conn, err
 }
 
+// --8<-- [end:connect]
+
+// newGNMITarget creates a new gNMI target.
+// --8<-- [start:new-gnmi-target].
 func newGNMITarget(ctx context.Context) (*target.Target, error) {
 	// create a target
 	tg, err := api.NewTarget(
@@ -182,6 +213,8 @@ func newGNMITarget(ctx context.Context) (*target.Target, error) {
 
 	return tg, nil
 }
+
+// --8<-- [end:new-gnmi-target]
 
 func (a *App) getUptime(ctx context.Context) (string, error) {
 	// create a GetRequest

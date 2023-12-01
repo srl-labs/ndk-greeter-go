@@ -14,12 +14,15 @@ const (
 )
 
 // ConfigState holds the application configuration and state.
+// --8<-- [start:configstate-struct].
 type ConfigState struct {
 	// Name is the name to use in the greeting.
 	Name string `json:"name"`
 	// Greeting is the greeting message to be displayed.
 	Greeting string `json:"greeting,omitempty"`
 }
+
+// --8<-- [end:configstate-struct]
 
 func (a *App) handleConfigNotifications(ctx context.Context, notifStreamResp *ndk.NotificationStreamResponse) {
 	buf := a.bufferConfigNotifications(notifStreamResp)

@@ -9,8 +9,9 @@ import (
 )
 
 // StartConfigNotificationStream starts a notification stream for Config service notifications.
+// --8<-- [start:start-cfg-notif-stream].
 func (a *App) StartConfigNotificationStream(ctx context.Context) chan *ndk.NotificationStreamResponse {
-	streamID := a.createNotificationSubscription(ctx)
+	streamID := a.createNotificationStream(ctx)
 
 	a.logger.Info().
 		Uint64("stream-id", streamID).
@@ -26,16 +27,26 @@ func (a *App) StartConfigNotificationStream(ctx context.Context) chan *ndk.Notif
 		},
 	}
 
+	registerResponse, err := a.SDKMgrServiceClient.NotificationRegister(ctx, notificationRegisterRequest)
+	if err != nil || registerResponse.GetStatus() != ndk.SdkMgrStatus_kSdkMgrSuccess {
+		a.logger.Printf("agent %s failed registering to notification with req=%+v: %v",
+			a.Name, notificationRegisterRequest, err)
+	}
+
 	streamChan := make(chan *ndk.NotificationStreamResponse)
-	go a.startNotificationStream(ctx, notificationRegisterRequest, streamChan)
+	go a.startNotificationStream(ctx, streamID,
+		subscriptionTypeName(notificationRegisterRequest), streamChan)
 
 	return streamChan
 }
 
-// createNotificationSubscription creates a subscription and return the Stream ID.
+// --8<-- [end:start-cfg-notif-stream]
+
+// createNotificationStream creates a notification stream and returns the Stream ID.
 // Stream ID is used to register notifications for other services.
 // It retries with retryTimeout until it succeeds.
-func (a *App) createNotificationSubscription(ctx context.Context) uint64 {
+// --8<-- [start:create-notif-stream].
+func (a *App) createNotificationStream(ctx context.Context) uint64 {
 	retry := time.NewTicker(a.retryTimeout)
 
 	for {
@@ -57,18 +68,25 @@ func (a *App) createNotificationSubscription(ctx context.Context) uint64 {
 	}
 }
 
-func (a *App) startNotificationStream(ctx context.Context, req *ndk.NotificationRegisterRequest,
+// --8<-- [end:create-notif-stream]
+
+// startNotificationStream starts a notification stream for a given NotificationRegisterRequest
+// and sends the received notifications to the passed channel.
+// --8<-- [start:start-notif-stream].
+func (a *App) startNotificationStream(ctx context.Context,
+	streamID uint64,
+	subscType string,
 	streamChan chan *ndk.NotificationStreamResponse,
 ) {
 	defer close(streamChan)
 
 	a.logger.Info().
-		Uint64("stream-id", req.GetStreamId()).
-		Str("subscription-type", subscriptionTypeName(req)).
+		Uint64("stream-id", streamID).
+		Str("subscription-type", subscType).
 		Msg("Starting streaming notifications")
 
 	retry := time.NewTicker(a.retryTimeout)
-	streamClient := a.getNotificationStreamClient(ctx, req)
+	streamClient := a.getNotificationStreamClient(ctx, streamID)
 
 	for {
 		select {
@@ -77,7 +95,7 @@ func (a *App) startNotificationStream(ctx context.Context, req *ndk.Notification
 		default:
 			streamResp, err := streamClient.Recv()
 			if err == io.EOF {
-				a.logger.Printf("agent %s received EOF for stream %v", a.Name, req.GetSubscriptionTypes())
+				a.logger.Printf("agent %s received EOF for stream %v", a.Name, subscType)
 				a.logger.Printf("agent %s retrying in %s", a.Name, a.retryTimeout)
 
 				<-retry.C // retry timer
@@ -93,6 +111,8 @@ func (a *App) startNotificationStream(ctx context.Context, req *ndk.Notification
 		}
 	}
 }
+
+// --8<-- [end:start-notif-stream]
 
 // subscriptionTypeName returns the name of the service enclosed in a passed NotificationRegisterRequest.
 func subscriptionTypeName(r *ndk.NotificationRegisterRequest) string {
@@ -121,30 +141,17 @@ func subscriptionTypeName(r *ndk.NotificationRegisterRequest) string {
 
 // getNotificationStreamClient acquires the notification stream client that is used to receive
 // streamed notifications.
-func (a *App) getNotificationStreamClient(
-	ctx context.Context,
-	req *ndk.NotificationRegisterRequest,
-) ndk.SdkNotificationService_NotificationStreamClient {
+// --8<-- [start:stream-client].
+func (a *App) getNotificationStreamClient(ctx context.Context, streamID uint64) ndk.SdkNotificationService_NotificationStreamClient {
 	retry := time.NewTicker(a.retryTimeout)
 
-	var streamClient ndk.SdkNotificationService_NotificationStreamClient
 	for {
-		registerResponse, err := a.SDKMgrServiceClient.NotificationRegister(ctx, req)
-		if err != nil || registerResponse.GetStatus() != ndk.SdkMgrStatus_kSdkMgrSuccess {
-			a.logger.Printf("agent %s failed registering to notification with req=%+v: %v", a.Name, req, err)
-			a.logger.Printf("agent %s retrying in %s", a.Name, a.retryTimeout)
-
-			<-retry.C // retry timer
-			continue
-
-		}
-
-		streamClient, err = a.NotificationServiceClient.NotificationStream(ctx,
+		streamClient, err := a.NotificationServiceClient.NotificationStream(ctx,
 			&ndk.NotificationStreamRequest{
-				StreamId: req.GetStreamId(),
+				StreamId: streamID,
 			})
 		if err != nil {
-			a.logger.Printf("agent %s failed creating stream client with req=%+v: %v", a.Name, req, err)
+			a.logger.Info().Msgf("agent %s failed creating stream client with stream ID=%d: %v", a.Name, streamID, err)
 			a.logger.Printf("agent %s retrying in %s", a.Name, a.retryTimeout)
 			time.Sleep(a.retryTimeout)
 
@@ -155,3 +162,5 @@ func (a *App) getNotificationStreamClient(
 		return streamClient
 	}
 }
+
+// --8<-- [end:stream-client]
