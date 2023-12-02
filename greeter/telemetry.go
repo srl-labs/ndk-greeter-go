@@ -7,34 +7,19 @@ import (
 	"github.com/nokia/srlinux-ndk-go/ndk"
 )
 
-func (a *App) updateGreeterState(ctx context.Context) {
-	uptime, err := a.getUptime(ctx)
-	if err != nil {
-		a.logger.Info().Msgf("failed to get uptime: %v", err)
-		return
-	}
-
-	a.ConfigState.Greeting = "👋 Hello " + a.ConfigState.Name +
-		", SR Linux was last booted at " + uptime
-
+// updateState updates the state of the application.
+func (a *App) updateState(ctx context.Context) {
 	jsData, err := json.Marshal(a.ConfigState)
 	if err != nil {
 		a.logger.Info().Msgf("failed to marshal json data: %v", err)
 		return
 	}
 
-	a.updateState(ctx, greeterKeyPath, string(jsData))
+	a.telemetryAddOrUpdate(ctx, greeterKeyPath, string(jsData))
 }
 
-// deleteGreeterState deletes the state of the application.
-func (a *App) deleteGreeterState(ctx context.Context) {
-	jsData := "{}"
-
-	a.updateState(ctx, greeterKeyPath, jsData)
-}
-
-// updateState updates the state of the application using provided path and data.
-func (a *App) updateState(ctx context.Context, jsPath string, jsData string) {
+// telemetryAddOrUpdate updates the state of the application using provided path and data.
+func (a *App) telemetryAddOrUpdate(ctx context.Context, jsPath string, jsData string) {
 	a.logger.Info().Msgf("updating: %s: %s", jsPath, jsData)
 
 	key := &ndk.TelemetryKey{JsPath: jsPath}

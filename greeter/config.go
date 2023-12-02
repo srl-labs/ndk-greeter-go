@@ -17,16 +17,16 @@ const (
 // --8<-- [start:configstate-struct].
 type ConfigState struct {
 	// Name is the name to use in the greeting.
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 	// Greeting is the greeting message to be displayed.
 	Greeting string `json:"greeting,omitempty"`
 }
 
 // --8<-- [end:configstate-struct]
 
-// handleConfigNotifications handles the configuration notifications received.
+// aggregateConfigNotifications handles the configuration notifications received.
 // --8<-- [start:handle-cfg-notif].
-func (a *App) handleConfigNotifications(ctx context.Context, notifStreamResp *ndk.NotificationStreamResponse) {
+func (a *App) aggregateConfigNotifications(ctx context.Context, notifStreamResp *ndk.NotificationStreamResponse) {
 	buf := a.bufferConfigNotifications(notifStreamResp)
 
 	// process config buffer
@@ -47,26 +47,23 @@ func (a *App) handleGreeterConfig(ctx context.Context, cfg *ndk.ConfigNotificati
 		a.logger.Info().Msgf("Handling deletion of the .greeter config tree: %+v", cfg)
 		a.ConfigState = &ConfigState{}
 
-		a.deleteGreeterState(ctx)
+		a.ConfigReceived <- struct{}{}
 
 		return
 	}
 
 	a.logger.Info().Msgf("Handling create or update for .greeter config tree: %+v", cfg)
-	a.handleGreeterCreateOrUpdate(ctx, cfg.GetData())
-	a.updateGreeterState(ctx)
+
+	err := json.Unmarshal([]byte(cfg.GetData().GetJson()), a.ConfigState)
+	if err != nil {
+		a.logger.Error().Msgf("failed to unmarshal path %q config %+v", ".greeter", cfg.GetData())
+		return
+	}
+
+	a.ConfigReceived <- struct{}{}
 }
 
 // --8<-- [start:handle-greeter-cfg]
-
-func (a *App) handleGreeterCreateOrUpdate(ctx context.Context, data *ndk.ConfigData) {
-	// read the config into the application config struct
-	err := json.Unmarshal([]byte(data.GetJson()), a.ConfigState)
-	if err != nil {
-		a.logger.Error().Msgf("failed to unmarshal path %q config %+v", ".greeter", data)
-		return
-	}
-}
 
 // bufferConfigNotifications buffers the configuration notifications received
 // from the config notification stream before commit end notification is received.
@@ -98,3 +95,20 @@ func (a *App) bufferConfigNotifications(notifStreamResp *ndk.NotificationStreamR
 }
 
 // --8<-- [end:buffer-cfg-notif]
+
+func (a *App) processConfig(ctx context.Context) {
+	if a.ConfigState.Name == "" {
+		a.logger.Info().Msg("No name configured, deleting state")
+
+		return
+	}
+
+	uptime, err := a.getUptime(ctx)
+	if err != nil {
+		a.logger.Info().Msgf("failed to get uptime: %v", err)
+		return
+	}
+
+	a.ConfigState.Greeting = "👋 Hello " + a.ConfigState.Name +
+		", SR Linux was last booted at " + uptime
+}
