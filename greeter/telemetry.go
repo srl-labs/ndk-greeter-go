@@ -26,6 +26,13 @@ func (a *App) updateGreeterState(ctx context.Context) {
 	a.updateState(ctx, greeterKeyPath, string(jsData))
 }
 
+// deleteGreeterState deletes the state of the application.
+func (a *App) deleteGreeterState(ctx context.Context) {
+	jsData := "{}"
+
+	a.updateState(ctx, greeterKeyPath, jsData)
+}
+
 // updateState updates the state of the application using provided path and data.
 func (a *App) updateState(ctx context.Context, jsPath string, jsData string) {
 	a.logger.Info().Msgf("updating: %s: %s", jsPath, jsData)

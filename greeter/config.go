@@ -24,10 +24,11 @@ type ConfigState struct {
 
 // --8<-- [end:configstate-struct]
 
+// handleConfigNotifications handles the configuration notifications received.
+// --8<-- [start:handle-cfg-notif].
 func (a *App) handleConfigNotifications(ctx context.Context, notifStreamResp *ndk.NotificationStreamResponse) {
 	buf := a.bufferConfigNotifications(notifStreamResp)
 
-	// commit end notification received
 	// process config buffer
 	for _, cfg := range buf {
 		switch cfg.Key.JsPath {
@@ -37,23 +38,26 @@ func (a *App) handleConfigNotifications(ctx context.Context, notifStreamResp *nd
 	}
 }
 
-// handleGreeterConfig handles configuration changes for greeter application.
-func (a *App) handleGreeterConfig(ctx context.Context, cfg *ndk.ConfigNotification) {
-	switch cfg.GetOp() {
-	case ndk.SdkMgrOperation_Create, ndk.SdkMgrOperation_Update:
-		// upon sr linux boot, the first config notification contains empty data
-		// we skip it, as we do not carry out any action on empty config.
-		if strings.TrimSpace(cfg.GetData().GetJson()) == "{\n}" {
-			a.logger.Info().Msgf("Empty config data for create/update operation for key %q", cfg.GetKey().GetJsPath())
-			return
-		}
+// --8<-- [end:handle-cfg-notif]
 
-		a.logger.Info().Msgf("Handling create or update for .greeter config tree: %+v", cfg)
-		a.handleGreeterCreateOrUpdate(ctx, cfg.GetData())
+// handleGreeterConfig handles configuration changes for greeter application.
+// --8<-- [start:handle-greeter-cfg].
+func (a *App) handleGreeterConfig(ctx context.Context, cfg *ndk.ConfigNotification) {
+	if strings.TrimSpace(cfg.GetData().GetJson()) == "{\n}" {
+		a.logger.Info().Msgf("Handling deletion of the .greeter config tree: %+v", cfg)
+		a.ConfigState = &ConfigState{}
+
+		a.deleteGreeterState(ctx)
+
+		return
 	}
 
+	a.logger.Info().Msgf("Handling create or update for .greeter config tree: %+v", cfg)
+	a.handleGreeterCreateOrUpdate(ctx, cfg.GetData())
 	a.updateGreeterState(ctx)
 }
+
+// --8<-- [start:handle-greeter-cfg]
 
 func (a *App) handleGreeterCreateOrUpdate(ctx context.Context, data *ndk.ConfigData) {
 	// read the config into the application config struct
@@ -66,6 +70,7 @@ func (a *App) handleGreeterCreateOrUpdate(ctx context.Context, data *ndk.ConfigD
 
 // bufferConfigNotifications buffers the configuration notifications received
 // from the config notification stream before commit end notification is received.
+// --8<-- [start:buffer-cfg-notif].
 func (a *App) bufferConfigNotifications(notifStreamResp *ndk.NotificationStreamResponse) []*ndk.ConfigNotification {
 	notifs := notifStreamResp.GetNotification()
 	// buf holds the configuration notifications received before commit end.
@@ -91,3 +96,5 @@ func (a *App) bufferConfigNotifications(notifStreamResp *ndk.NotificationStreamR
 
 	return buf
 }
+
+// --8<-- [end:buffer-cfg-notif]
