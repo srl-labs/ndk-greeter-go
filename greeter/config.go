@@ -43,14 +43,14 @@ func (a *App) receiveConfigNotifications(ctx context.Context) {
 		case <-bufFilledCh:
 			a.logger.Info().Msg("Config notifications buffered, processing config")
 
-			for _, cfg := range a.ConfigBuffer {
+			for _, cfg := range a.configBuffer {
 				a.handleGreeterConfig(ctx, cfg)
 			}
 
 			a.logger.Debug().Msg("Configuration has been read, clearing the config buffer")
-			a.ConfigBuffer = make([]*ndk.ConfigNotification, 0)
+			a.configBuffer = make([]*ndk.ConfigNotification, 0)
 
-			a.ConfigReceived <- struct{}{}
+			a.configReceived <- struct{}{}
 		}
 	}
 }
@@ -63,12 +63,12 @@ func (a *App) handleGreeterConfig(ctx context.Context, cfg *ndk.ConfigNotificati
 	switch {
 	case strings.TrimSpace(cfg.GetData().GetJson()) == "{\n}":
 		a.logger.Info().Msgf("Handling deletion of the .greeter config tree: %+v", cfg)
-		a.ConfigState = &ConfigState{}
+		a.configState = &ConfigState{}
 
 	default:
 		a.logger.Info().Msgf("Handling create or update for .greeter config tree: %+v", cfg)
 
-		err := json.Unmarshal([]byte(cfg.GetData().GetJson()), a.ConfigState)
+		err := json.Unmarshal([]byte(cfg.GetData().GetJson()), a.configState)
 		if err != nil {
 			a.logger.Error().Msgf("failed to unmarshal path %q config %+v", ".greeter", cfg.GetData())
 			return
@@ -100,10 +100,10 @@ func (a *App) bufferConfigNotifications(
 			a.logger.Debug().
 				Msgf("Storing config notification in buffer:%+v", cfgNotif)
 
-			a.ConfigBuffer = append(a.ConfigBuffer, cfgNotif)
+			a.configBuffer = append(a.configBuffer, cfgNotif)
 		}
 
-		if cfgNotif.Key.JsPath == commitEndKeyPath && len(a.ConfigBuffer) > 0 {
+		if cfgNotif.Key.JsPath == commitEndKeyPath && len(a.configBuffer) > 0 {
 			a.logger.Debug().
 				Msgf("Received commit end notification:%+v", cfgNotif)
 
@@ -115,7 +115,7 @@ func (a *App) bufferConfigNotifications(
 // --8<-- [end:buffer-cfg-notif]
 
 func (a *App) processConfig(ctx context.Context) {
-	if a.ConfigState.Name == "" {
+	if a.configState.Name == "" {
 		a.logger.Info().Msg("No name configured, deleting state")
 
 		return
@@ -127,7 +127,7 @@ func (a *App) processConfig(ctx context.Context) {
 		return
 	}
 
-	a.ConfigState.Greeting = "👋 Hi " + a.ConfigState.Name +
+	a.configState.Greeting = "👋 Hi " + a.configState.Name +
 		", SR Linux was last booted at " + uptime
 }
 

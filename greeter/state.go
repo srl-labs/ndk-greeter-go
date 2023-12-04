@@ -9,7 +9,7 @@ import (
 
 // updateState updates the state of the application.
 func (a *App) updateState(ctx context.Context) {
-	jsData, err := json.Marshal(a.ConfigState)
+	jsData, err := json.Marshal(a.configState)
 	if err != nil {
 		a.logger.Info().Msgf("failed to marshal json data: %v", err)
 		return

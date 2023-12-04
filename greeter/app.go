@@ -31,11 +31,11 @@ type App struct {
 	Name  string // Agent name
 	AppID uint32
 
-	// ConfigState holds the application configuration and state.
-	ConfigState *ConfigState
-	// ConfigBuffer aggregates the config notifications received.
-	ConfigBuffer   []*ndk.ConfigNotification
-	ConfigReceived chan struct{}
+	// configState holds the application configuration and state.
+	configState *ConfigState
+	// configBuffer aggregates the config notifications received.
+	configBuffer   []*ndk.ConfigNotification
+	configReceived chan struct{}
 
 	gRPCConn     *grpc.ClientConn
 	logger       *zerolog.Logger
@@ -99,11 +99,11 @@ func NewApp(ctx context.Context, logger *zerolog.Logger) *App {
 		Name:  AppName,
 		AppID: r.GetAppId(), //(1)!
 
-		ConfigState:  &ConfigState{},
-		ConfigBuffer: make([]*ndk.ConfigNotification, 0),
+		configState:  &ConfigState{},
+		configBuffer: make([]*ndk.ConfigNotification, 0),
 		// ConfigReceived chan receives the value when the full config
 		// is received by the stream client.
-		ConfigReceived: make(chan struct{}), //(2)!
+		configReceived: make(chan struct{}), //(2)!
 
 		logger:       logger,
 		retryTimeout: 5 * time.Second,
@@ -127,7 +127,7 @@ func (a *App) Start(ctx context.Context) {
 
 	for {
 		select {
-		case <-a.ConfigReceived:
+		case <-a.configReceived:
 			a.logger.Info().Msg("Received full config")
 
 			a.processConfig(ctx)
