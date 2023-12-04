@@ -97,7 +97,6 @@ func NewApp(ctx context.Context, logger *zerolog.Logger) *App {
 		AppID: r.GetAppId(), //(1)!
 
 		configState: &ConfigState{
-			buffer:     make([]*ndk.ConfigNotification, 0),
 			receivedCh: make(chan struct{}),
 		},
 
