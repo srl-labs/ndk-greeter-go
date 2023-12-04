@@ -21,6 +21,12 @@ type ConfigState struct {
 	Name string `json:"name,omitempty"`
 	// Greeting is the greeting message to be displayed.
 	Greeting string `json:"greeting,omitempty"`
+
+	// buffer aggregates the config notifications received.
+	buffer []*ndk.ConfigNotification
+	// receivedCh chan receives the value when the full config
+	// is received by the stream client.
+	receivedCh chan struct{}
 }
 
 // --8<-- [end:configstate-struct]
@@ -43,14 +49,14 @@ func (a *App) receiveConfigNotifications(ctx context.Context) {
 		case <-bufFilledCh:
 			a.logger.Info().Msg("Config notifications buffered, processing config")
 
-			for _, cfg := range a.configBuffer {
+			for _, cfg := range a.configState.buffer {
 				a.handleGreeterConfig(ctx, cfg)
 			}
 
 			a.logger.Debug().Msg("Configuration has been read, clearing the config buffer")
-			a.configBuffer = make([]*ndk.ConfigNotification, 0)
+			a.configState.buffer = make([]*ndk.ConfigNotification, 0)
 
-			a.configReceived <- struct{}{}
+			a.configState.receivedCh <- struct{}{}
 		}
 	}
 }
@@ -100,10 +106,10 @@ func (a *App) bufferConfigNotifications(
 			a.logger.Debug().
 				Msgf("Storing config notification in buffer: %+v", cfgNotif)
 
-			a.configBuffer = append(a.configBuffer, cfgNotif)
+			a.configState.buffer = append(a.configState.buffer, cfgNotif)
 		}
 
-		if cfgNotif.Key.JsPath == commitEndKeyPath && len(a.configBuffer) > 0 {
+		if cfgNotif.Key.JsPath == commitEndKeyPath && len(a.configState.buffer) > 0 {
 			a.logger.Debug().
 				Msgf("Received commit end notification: %+v", cfgNotif)
 
