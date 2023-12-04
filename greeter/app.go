@@ -28,13 +28,15 @@ const (
 // App is the greeter application struct.
 // --8<-- [start:app-struct].
 type App struct {
-	Name  string // Agent name
+	Name  string
 	AppID uint32
 
 	// configState holds the application configuration and state.
 	configState *ConfigState
 	// configBuffer aggregates the config notifications received.
-	configBuffer   []*ndk.ConfigNotification
+	configBuffer []*ndk.ConfigNotification
+	// ConfigReceived chan receives the value when the full config
+	// is received by the stream client.
 	configReceived chan struct{}
 
 	gRPCConn     *grpc.ClientConn
