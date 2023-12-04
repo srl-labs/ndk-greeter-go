@@ -57,6 +57,7 @@ func (a *App) receiveConfigNotifications(ctx context.Context) {
 // --8<-- [start:handle-greeter-cfg].
 func (a *App) handleGreeterConfig(cfg *ndk.ConfigNotification) {
 	switch {
+	// --8<-- [start:delete-case].
 	case a.isEmptyObject(cfg.GetData().GetJson()):
 		m := sync.Mutex{}
 		m.Lock()
@@ -67,7 +68,9 @@ func (a *App) handleGreeterConfig(cfg *ndk.ConfigNotification) {
 		a.configState.Greeting = ""
 
 		m.Unlock()
+	// --8<-- [end:delete-case].
 
+	// --8<-- [start:non-delete-case].
 	default:
 		a.logger.Info().Msgf("Handling create or update for .greeter config tree: %+v", cfg)
 
@@ -76,6 +79,7 @@ func (a *App) handleGreeterConfig(cfg *ndk.ConfigNotification) {
 			a.logger.Error().Msgf("failed to unmarshal path %q config %+v", ".greeter", cfg.GetData())
 			return
 		}
+		// --8<-- [end:non-delete-case].
 	}
 }
 
@@ -97,8 +101,6 @@ func (a *App) handleConfigNotifications(
 			continue
 		}
 
-		// do not include commit end notification in the buffer
-		// as it is just an indication that the config is passed in full.
 		if cfgNotif.Key.JsPath != commitEndKeyPath {
 			a.logger.Debug().
 				Msgf("Handling config notification: %+v", cfgNotif)
@@ -106,6 +108,8 @@ func (a *App) handleConfigNotifications(
 			a.handleGreeterConfig(cfgNotif)
 		}
 
+		// commit.end notification is received and it is not a zero commit sequence
+		// this means that the full config is received and we can process it
 		if cfgNotif.Key.JsPath == commitEndKeyPath &&
 			!a.isCommitSeqZero(cfgNotif.GetData().GetJson()) {
 			a.logger.Debug().
@@ -117,10 +121,13 @@ func (a *App) handleConfigNotifications(
 }
 
 // --8<-- [end:buffer-cfg-notif]
-
+// processConfig processes the configuration received from the config notification stream
+// and retrieves the uptime from the system.
+// --8<-- [start:process-config].
 func (a *App) processConfig(ctx context.Context) {
 	if a.configState.Name == "" {
 		a.logger.Info().Msg("No name configured, deleting state")
+		a.configState.Greeting = ""
 
 		return
 	}
@@ -134,6 +141,8 @@ func (a *App) processConfig(ctx context.Context) {
 	a.configState.Greeting = "👋 Hi " + a.configState.Name +
 		", SR Linux was last booted at " + uptime
 }
+
+// --8<-- [end:process-config].
 
 type CommitSeq struct {
 	CommitSeq int `json:"commit_seq"`
