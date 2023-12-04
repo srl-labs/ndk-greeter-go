@@ -34,7 +34,7 @@ type ConfigState struct {
 // receiveConfigNotifications receives a stream of configuration notifications
 // buffer them in the configuration buffer and populates ConfigState struct of the App
 // once the whole committed config is received.
-// --8<-- [start:handle-cfg-notif].
+// --8<-- [start:rcv-cfg-notif].
 func (a *App) receiveConfigNotifications(ctx context.Context) {
 	bufFilledCh := make(chan struct{})
 
@@ -42,10 +42,6 @@ func (a *App) receiveConfigNotifications(ctx context.Context) {
 
 	for {
 		select {
-		case <-ctx.Done():
-			a.logger.Info().Msg("Context done, quitting configuration receive loop")
-			return
-
 		case <-bufFilledCh:
 			a.logger.Info().Msg("Config notifications buffered, processing config")
 
@@ -57,11 +53,15 @@ func (a *App) receiveConfigNotifications(ctx context.Context) {
 			a.configState.buffer = make([]*ndk.ConfigNotification, 0)
 
 			a.configState.receivedCh <- struct{}{}
+
+		case <-ctx.Done():
+			a.logger.Info().Msg("Context done, quitting configuration receive loop")
+			return
 		}
 	}
 }
 
-// --8<-- [end:handle-cfg-notif]
+// --8<-- [end:rcv-cfg-notif]
 
 // handleGreeterConfig handles configuration changes for greeter application.
 // --8<-- [start:handle-greeter-cfg].
