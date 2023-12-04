@@ -21,10 +21,6 @@ type ConfigState struct {
 	Name string `json:"name,omitempty"`
 	// Greeting is the greeting message to be displayed.
 	Greeting string `json:"greeting,omitempty"`
-
-	// receivedCh chan receives the value when the full config
-	// is received by the stream client.
-	receivedCh chan struct{}
 }
 
 // --8<-- [end:configstate-struct]
@@ -64,8 +60,7 @@ func (a *App) handleGreeterConfig(cfg *ndk.ConfigNotification) {
 
 		a.logger.Info().Msgf("Handling deletion of the .greeter config tree: %+v", cfg)
 
-		a.configState.Name = ""
-		a.configState.Greeting = ""
+		a.configState = &ConfigState{}
 
 		m.Unlock()
 	// --8<-- [end:delete-case].
@@ -115,7 +110,7 @@ func (a *App) handleConfigNotifications(
 			a.logger.Debug().
 				Msgf("Received commit end notification: %+v", cfgNotif)
 
-			a.configState.receivedCh <- struct{}{}
+			a.configReceivedCh <- struct{}{}
 		}
 	}
 }
@@ -127,7 +122,7 @@ func (a *App) handleConfigNotifications(
 func (a *App) processConfig(ctx context.Context) {
 	if a.configState.Name == "" {
 		a.logger.Info().Msg("No name configured, deleting state")
-		a.configState.Greeting = ""
+		a.configState = &ConfigState{}
 
 		return
 	}
