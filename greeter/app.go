@@ -217,6 +217,8 @@ func newGNMITarget(ctx context.Context) (*target.Target, error) {
 // --8<-- [end:new-gnmi-target]
 
 func (a *App) getUptime(ctx context.Context) (string, error) {
+	a.logger.Info().Msg("Fetching SR Linux uptime value")
+
 	// create a GetRequest
 	getReq, err := api.NewGetRequest(
 		api.Path("/system/information/last-booted"),

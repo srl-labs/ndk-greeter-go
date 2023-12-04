@@ -98,14 +98,14 @@ func (a *App) bufferConfigNotifications(
 		// as it is just an indication that the config is passed in full.
 		if cfgNotif.Key.JsPath != commitEndKeyPath {
 			a.logger.Debug().
-				Msgf("Storing config notification in buffer:%+v", cfgNotif)
+				Msgf("Storing config notification in buffer: %+v", cfgNotif)
 
 			a.configBuffer = append(a.configBuffer, cfgNotif)
 		}
 
 		if cfgNotif.Key.JsPath == commitEndKeyPath && len(a.configBuffer) > 0 {
 			a.logger.Debug().
-				Msgf("Received commit end notification:%+v", cfgNotif)
+				Msgf("Received commit end notification: %+v", cfgNotif)
 
 			doneCh <- struct{}{}
 		}
