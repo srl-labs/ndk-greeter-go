@@ -11,7 +11,6 @@ import (
 
 const (
 	commitEndKeyPath = ".commit.end"
-	greeterKeyPath   = ".greeter"
 )
 
 // ConfigState holds the application configuration and state.
@@ -133,8 +132,10 @@ func (a *App) processConfig(ctx context.Context) {
 		return
 	}
 
+	// --8<-- [start:greeting-msg].
 	a.configState.Greeting = "👋 Hi " + a.configState.Name +
 		", SR Linux was last booted at " + uptime
+	// --8<-- [end:greeting-msg].
 }
 
 // --8<-- [end:process-config].

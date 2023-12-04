@@ -213,6 +213,8 @@ func newGNMITarget(ctx context.Context) (*target.Target, error) {
 
 // --8<-- [end:new-gnmi-target]
 
+// getUpTime retrieves the uptime from the system using gNMI.
+// --8<-- [start:get-uptime].
 func (a *App) getUptime(ctx context.Context) (string, error) {
 	a.logger.Info().Msg("Fetching SR Linux uptime value")
 
@@ -233,3 +235,5 @@ func (a *App) getUptime(ctx context.Context) (string, error) {
 
 	return getResp.Notification[0].Update[0].GetVal().GetStringVal(), nil
 }
+
+// --8<-- [end:get-uptime].
