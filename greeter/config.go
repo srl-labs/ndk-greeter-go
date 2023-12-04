@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"strings"
-	"sync"
 
 	"github.com/nokia/srlinux-ndk-go/ndk"
 	"google.golang.org/protobuf/encoding/prototext"
@@ -26,44 +25,31 @@ type ConfigState struct {
 
 // --8<-- [end:configstate-struct]
 
-// receiveConfigNotifications handles the configuration notifications received.
+// receiveConfigNotifications receives a stream of configuration notifications
+// buffer them in the configuration buffer and populates ConfigState struct of the App
+// once the whole committed config is received.
 // --8<-- [start:handle-cfg-notif].
 func (a *App) receiveConfigNotifications(ctx context.Context) {
-	configStream := a.StartConfigNotificationStream(ctx)
-
 	bufDone := make(chan struct{})
 
-	go func() {
-		for cfgStreamResp := range configStream {
-			b, err := prototext.MarshalOptions{Multiline: true, Indent: "  "}.Marshal(cfgStreamResp)
-			if err != nil {
-				a.logger.Info().
-					Msgf("Config notification Marshal failed: %+v", err)
-				continue
-			}
-
-			a.logger.Info().
-				Msgf("Received notifications:\n%s", b)
-
-			a.bufferConfigNotifications(cfgStreamResp, bufDone)
-		}
-	}()
+	go a.receiveAndBufferConfigNotifications(ctx, bufDone)
 
 	for {
 		select {
 		case <-ctx.Done():
-			a.logger.Info().Msg("Context done, exiting config notification handler")
+			a.logger.Info().Msg("Context done, quitting configuration receive loop")
 			return
 
 		case <-bufDone:
-			a.logger.Info().Msg("Buffer done, processing config")
+			a.logger.Info().Msg("Config notifications buffered, processing config")
 
 			for _, cfg := range a.ConfigBuffer {
 				a.handleGreeterConfig(ctx, cfg)
 			}
-			// clear the config buffer
-			a.logger.Info().Msg("Clearing config buffer")
+
+			a.logger.Debug().Msg("Configuration has been read, clearing the config buffer")
 			a.ConfigBuffer = make([]*ndk.ConfigNotification, 0)
+
 			a.ConfigReceived <- struct{}{}
 		}
 	}
@@ -114,7 +100,7 @@ func (a *App) bufferConfigNotifications(
 			a.logger.Debug().
 				Msgf("Storing config notification in buffer:%+v", cfgNotif)
 
-			a.addToConfigBuffer(cfgNotif)
+			a.ConfigBuffer = append(a.ConfigBuffer, cfgNotif)
 		}
 
 		if cfgNotif.Key.JsPath == commitEndKeyPath && len(a.ConfigBuffer) > 0 {
@@ -145,11 +131,20 @@ func (a *App) processConfig(ctx context.Context) {
 		", SR Linux was last booted at " + uptime
 }
 
-func (a *App) addToConfigBuffer(cfg *ndk.ConfigNotification) {
-	var mutex sync.Mutex
+func (a *App) receiveAndBufferConfigNotifications(ctx context.Context, bufDone chan struct{}) {
+	configStream := a.StartConfigNotificationStream(ctx)
 
-	mutex.Lock()
-	defer mutex.Unlock()
+	for cfgStreamResp := range configStream {
+		b, err := prototext.MarshalOptions{Multiline: true, Indent: "  "}.Marshal(cfgStreamResp)
+		if err != nil {
+			a.logger.Info().
+				Msgf("Config notification Marshal failed: %+v", err)
+			continue
+		}
 
-	a.ConfigBuffer = append(a.ConfigBuffer, cfg)
+		a.logger.Info().
+			Msgf("Received notifications:\n%s", b)
+
+		a.bufferConfigNotifications(cfgStreamResp, bufDone)
+	}
 }
