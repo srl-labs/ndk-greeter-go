@@ -57,7 +57,7 @@ function build-app {
     echo "Building application"
     mkdir -p ${BIN_DIR}
     go mod tidy
-    go build -o ${BINARY} -ldflags="${LDFLAGS}" .
+    go build -race -o ${BINARY} -ldflags="${LDFLAGS}" .
 }
 
 #################################

@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"strings"
+	"sync"
 
 	"github.com/nokia/srlinux-ndk-go/ndk"
+	"google.golang.org/protobuf/encoding/prototext"
 )
 
 const (
@@ -24,16 +26,45 @@ type ConfigState struct {
 
 // --8<-- [end:configstate-struct]
 
-// aggregateConfigNotifications handles the configuration notifications received.
+// receiveConfigNotifications handles the configuration notifications received.
 // --8<-- [start:handle-cfg-notif].
-func (a *App) aggregateConfigNotifications(ctx context.Context, notifStreamResp *ndk.NotificationStreamResponse) {
-	buf := a.bufferConfigNotifications(notifStreamResp)
+func (a *App) receiveConfigNotifications(ctx context.Context) {
+	configStream := a.StartConfigNotificationStream(ctx)
 
-	// process config buffer
-	for _, cfg := range buf {
-		switch cfg.Key.JsPath {
-		case greeterKeyPath:
-			a.handleGreeterConfig(ctx, cfg)
+	bufDone := make(chan struct{})
+
+	go func() {
+		for cfgStreamResp := range configStream {
+			b, err := prototext.MarshalOptions{Multiline: true, Indent: "  "}.Marshal(cfgStreamResp)
+			if err != nil {
+				a.logger.Info().
+					Msgf("Config notification Marshal failed: %+v", err)
+				continue
+			}
+
+			a.logger.Info().
+				Msgf("Received notifications:\n%s", b)
+
+			a.bufferConfigNotifications(cfgStreamResp, bufDone)
+		}
+	}()
+
+	for {
+		select {
+		case <-ctx.Done():
+			a.logger.Info().Msg("Context done, exiting config notification handler")
+			return
+
+		case <-bufDone:
+			a.logger.Info().Msg("Buffer done, processing config")
+
+			for _, cfg := range a.ConfigBuffer {
+				a.handleGreeterConfig(ctx, cfg)
+			}
+			// clear the config buffer
+			a.logger.Info().Msg("Clearing config buffer")
+			a.ConfigBuffer = make([]*ndk.ConfigNotification, 0)
+			a.ConfigReceived <- struct{}{}
 		}
 	}
 }
@@ -43,35 +74,31 @@ func (a *App) aggregateConfigNotifications(ctx context.Context, notifStreamResp 
 // handleGreeterConfig handles configuration changes for greeter application.
 // --8<-- [start:handle-greeter-cfg].
 func (a *App) handleGreeterConfig(ctx context.Context, cfg *ndk.ConfigNotification) {
-	if strings.TrimSpace(cfg.GetData().GetJson()) == "{\n}" {
+	switch {
+	case strings.TrimSpace(cfg.GetData().GetJson()) == "{\n}":
 		a.logger.Info().Msgf("Handling deletion of the .greeter config tree: %+v", cfg)
 		a.ConfigState = &ConfigState{}
 
-		a.ConfigReceived <- struct{}{}
+	default:
+		a.logger.Info().Msgf("Handling create or update for .greeter config tree: %+v", cfg)
 
-		return
+		err := json.Unmarshal([]byte(cfg.GetData().GetJson()), a.ConfigState)
+		if err != nil {
+			a.logger.Error().Msgf("failed to unmarshal path %q config %+v", ".greeter", cfg.GetData())
+			return
+		}
 	}
-
-	a.logger.Info().Msgf("Handling create or update for .greeter config tree: %+v", cfg)
-
-	err := json.Unmarshal([]byte(cfg.GetData().GetJson()), a.ConfigState)
-	if err != nil {
-		a.logger.Error().Msgf("failed to unmarshal path %q config %+v", ".greeter", cfg.GetData())
-		return
-	}
-
-	a.ConfigReceived <- struct{}{}
 }
 
-// --8<-- [start:handle-greeter-cfg]
+// --8<-- [end:handle-greeter-cfg]
 
 // bufferConfigNotifications buffers the configuration notifications received
 // from the config notification stream before commit end notification is received.
 // --8<-- [start:buffer-cfg-notif].
-func (a *App) bufferConfigNotifications(notifStreamResp *ndk.NotificationStreamResponse) []*ndk.ConfigNotification {
+func (a *App) bufferConfigNotifications(
+	notifStreamResp *ndk.NotificationStreamResponse, doneCh chan struct{},
+) {
 	notifs := notifStreamResp.GetNotification()
-	// buf holds the configuration notifications received before commit end.
-	buf := make([]*ndk.ConfigNotification, 0, len(notifs))
 
 	for _, n := range notifs {
 		cfgNotif := n.GetConfig()
@@ -84,14 +111,19 @@ func (a *App) bufferConfigNotifications(notifStreamResp *ndk.NotificationStreamR
 		// do not include commit end notification in the buffer
 		// as it is just an indication that the config is passed in full.
 		if cfgNotif.Key.JsPath != commitEndKeyPath {
-			a.logger.Info().
+			a.logger.Debug().
 				Msgf("Storing config notification in buffer:%+v", cfgNotif)
 
-			buf = append(buf, cfgNotif)
+			a.addToConfigBuffer(cfgNotif)
+		}
+
+		if cfgNotif.Key.JsPath == commitEndKeyPath && len(a.ConfigBuffer) > 0 {
+			a.logger.Debug().
+				Msgf("Received commit end notification:%+v", cfgNotif)
+
+			doneCh <- struct{}{}
 		}
 	}
-
-	return buf
 }
 
 // --8<-- [end:buffer-cfg-notif]
@@ -111,4 +143,13 @@ func (a *App) processConfig(ctx context.Context) {
 
 	a.ConfigState.Greeting = "👋 Hello " + a.ConfigState.Name +
 		", SR Linux was last booted at " + uptime
+}
+
+func (a *App) addToConfigBuffer(cfg *ndk.ConfigNotification) {
+	var mutex sync.Mutex
+
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	a.ConfigBuffer = append(a.ConfigBuffer, cfg)
 }

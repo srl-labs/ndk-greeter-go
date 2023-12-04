@@ -14,7 +14,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/protobuf/encoding/prototext"
 )
 
 // --8<-- [start:pkg-greeter-const].
@@ -33,7 +32,9 @@ type App struct {
 	AppID uint32
 
 	// ConfigState holds the application configuration and state.
-	ConfigState    *ConfigState
+	ConfigState *ConfigState
+	// ConfigBuffer aggregates the config notifications received.
+	ConfigBuffer   []*ndk.ConfigNotification
 	ConfigReceived chan struct{}
 
 	gRPCConn     *grpc.ClientConn
@@ -98,7 +99,8 @@ func NewApp(ctx context.Context, logger *zerolog.Logger) *App {
 		Name:  AppName,
 		AppID: r.GetAppId(), //(1)!
 
-		ConfigState: &ConfigState{},
+		ConfigState:  &ConfigState{},
+		ConfigBuffer: make([]*ndk.ConfigNotification, 0),
 		// ConfigReceived chan receives the value when the full config
 		// is received by the stream client.
 		ConfigReceived: make(chan struct{}), //(2)!
@@ -121,23 +123,10 @@ func NewApp(ctx context.Context, logger *zerolog.Logger) *App {
 // Start starts the application.
 // --8<-- [start:app-start].
 func (a *App) Start(ctx context.Context) {
-	configStream := a.StartConfigNotificationStream(ctx)
+	go a.receiveConfigNotifications(ctx)
 
 	for {
 		select {
-		case cfgStreamResp := <-configStream:
-			b, err := prototext.MarshalOptions{Multiline: true, Indent: "  "}.Marshal(cfgStreamResp)
-			if err != nil {
-				a.logger.Info().
-					Msgf("Config notification Marshal failed: %+v", err)
-				continue
-			}
-
-			a.logger.Info().
-				Msgf("Received notifications:\n%s", b)
-
-			go a.aggregateConfigNotifications(ctx, cfgStreamResp)
-
 		case <-a.ConfigReceived:
 			a.logger.Info().Msg("Received full config")
 
