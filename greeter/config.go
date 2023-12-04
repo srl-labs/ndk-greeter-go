@@ -30,9 +30,9 @@ type ConfigState struct {
 // once the whole committed config is received.
 // --8<-- [start:handle-cfg-notif].
 func (a *App) receiveConfigNotifications(ctx context.Context) {
-	bufDone := make(chan struct{})
+	bufFilledCh := make(chan struct{})
 
-	go a.receiveAndBufferConfigNotifications(ctx, bufDone)
+	go a.receiveAndBufferConfigNotifications(ctx, bufFilledCh)
 
 	for {
 		select {
@@ -40,7 +40,7 @@ func (a *App) receiveConfigNotifications(ctx context.Context) {
 			a.logger.Info().Msg("Context done, quitting configuration receive loop")
 			return
 
-		case <-bufDone:
+		case <-bufFilledCh:
 			a.logger.Info().Msg("Config notifications buffered, processing config")
 
 			for _, cfg := range a.ConfigBuffer {
@@ -127,11 +127,11 @@ func (a *App) processConfig(ctx context.Context) {
 		return
 	}
 
-	a.ConfigState.Greeting = "👋 Hello " + a.ConfigState.Name +
+	a.ConfigState.Greeting = "👋 Hi " + a.ConfigState.Name +
 		", SR Linux was last booted at " + uptime
 }
 
-func (a *App) receiveAndBufferConfigNotifications(ctx context.Context, bufDone chan struct{}) {
+func (a *App) receiveAndBufferConfigNotifications(ctx context.Context, bufFilledCh chan struct{}) {
 	configStream := a.StartConfigNotificationStream(ctx)
 
 	for cfgStreamResp := range configStream {
@@ -145,6 +145,6 @@ func (a *App) receiveAndBufferConfigNotifications(ctx context.Context, bufDone c
 		a.logger.Info().
 			Msgf("Received notifications:\n%s", b)
 
-		a.bufferConfigNotifications(cfgStreamResp, bufDone)
+		a.bufferConfigNotifications(cfgStreamResp, bufFilledCh)
 	}
 }
