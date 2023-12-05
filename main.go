@@ -72,6 +72,8 @@ func exitHandler(cancel context.CancelFunc) {
 
 // --8<-- [end:exit-handler]
 
+// setupLogger creates a logger instance.
+// --8<-- [start:setup-logger].
 func setupLogger() zerolog.Logger {
 	var writers []io.Writer
 
@@ -105,3 +107,5 @@ func setupLogger() zerolog.Logger {
 
 	return zerolog.New(mw).With().Timestamp().Logger()
 }
+
+// --8<-- [end:setup-logger]
