@@ -95,7 +95,7 @@ function deploy-lab {
 
 function destroy-lab {
     sudo clab des -c -t ${LABDIR}/${LABFILE}
-    sudo rm -rf logs/srl*/*
+    sudo rm -rf logs/srl/* logs/greeter/*
 }
 
 function check-clab-version {
