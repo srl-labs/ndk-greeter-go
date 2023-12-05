@@ -176,10 +176,25 @@ function package {
 	--packager ${packager}
 }
 
+_run_sh_autocomplete() {
+    local current_word
+    COMPREPLY=()
+    current_word="${COMP_WORDS[COMP_CWORD]}"
+
+    # Get list of function names in run.sh
+    local functions=$(declare -F -p | cut -d " " -f 3 | grep -v "^_" | grep -v "nvm_")
+
+    # Generate autocompletions based on the current word
+    COMPREPLY=( $(compgen -W "${functions}" -- ${current_word}) )
+}
+
+# Specify _run_sh_autocomplete as the source of autocompletions for run.sh
+complete -F _run_sh_autocomplete ./run.sh
+
 function help {
   printf "%s <task> [args]\n\nTasks:\n" "${0}"
 
-  compgen -A function | grep -v "^_" | cat -n
+  compgen -A function | grep -v "^_" | grep -v "nvm_" | cat -n
 
   printf "\nExtended help:\n  Each task has comments for general usage\n"
 }

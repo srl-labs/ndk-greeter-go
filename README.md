@@ -55,3 +55,11 @@ A:greeter# info from state greeter
         greeting "👋 Hello srlinux-user, I was last booted at 2023-11-26T10:24:27.374Z"
     }
 ```
+
+## Shell autocompletions
+
+To get bash autocompletions for `./run.sh` functions:
+
+```bash
+source ./run.sh
+```
