@@ -13,6 +13,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	syslog "github.com/RackSec/srslog"
+
 	"github.com/rs/zerolog"
 	"github.com/srl-labs/ndk-greeter-go/greeter"
 	"google.golang.org/grpc/metadata"
@@ -101,11 +103,17 @@ func setupLogger() zerolog.Logger {
 		MaxAge:     28, // days
 	}
 
-	writers = append(writers, fileLogger)
+	var zsyslog zerolog.SyslogWriter
+	zsyslog, err = syslog.Dial("", "", syslog.LOG_INFO|syslog.LOG_LOCAL6, "ndk-greeter-go")
+	if err != nil {
+		panic(err)
+	}
+
+	writers = append(writers, fileLogger, zsyslog)
 
 	mw := io.MultiWriter(writers...)
 
-	return zerolog.New(mw).With().Timestamp().Logger()
+	return zerolog.New(mw).With().Caller().Timestamp().Logger()
 }
 
 // --8<-- [end:setup-logger]
