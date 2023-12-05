@@ -7,7 +7,7 @@ import (
 	"github.com/nokia/srlinux-ndk-go/ndk"
 )
 
-// --8<-- [start:state-const]
+// --8<-- [start:state-const].
 const greeterKeyPath = ".greeter"
 
 // --8<-- [end:state-const]
@@ -27,7 +27,7 @@ func (a *App) updateState(ctx context.Context) {
 // --8<-- [end:update-state].
 
 // telemetryAddOrUpdate updates the state of the application using provided path and data.
-// --8<-- [start:telemetry-add-or-update]
+// --8<-- [start:telemetry-add-or-update].
 func (a *App) telemetryAddOrUpdate(ctx context.Context, jsPath string, jsData string) {
 	a.logger.Info().Msgf("updating: %s: %s", jsPath, jsData)
 

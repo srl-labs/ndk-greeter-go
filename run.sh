@@ -64,6 +64,7 @@ function build-app {
 # High-Level run functions
 #################################
 function deploy-all {
+    check-clab-version
     build-app
     deploy-lab
     install-app
@@ -95,6 +96,15 @@ function deploy-lab {
 function destroy-lab {
     sudo clab des -c -t ${LABDIR}/${LABFILE}
     sudo rm -rf logs/srl*/*
+}
+
+function check-clab-version {
+    version=$(clab version | awk '/version:/ {print $2}')
+    if [[ $(echo "$version 0.48.6" | tr " " "\n" | sort -V | head -n 1) != "0.48.6" ]]; then
+        echo "Upgrade containerlab to v0.48.6 or newer
+        Run 'sudo containerlab version upgrade' or use other installation options - https://containerlab.dev/install"
+        exit 1
+    fi
 }
 
 #################################
