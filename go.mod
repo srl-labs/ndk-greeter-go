@@ -3,6 +3,7 @@ module github.com/srl-labs/ndk-greeter-go
 go 1.20
 
 require (
+	github.com/RackSec/srslog v0.0.0-20180709174129-a4725f04ec91
 	github.com/nokia/srlinux-ndk-go v0.2.0
 	github.com/openconfig/gnmic/pkg/api v0.1.1
 	github.com/openconfig/gnmic/pkg/target v0.1.1
