@@ -103,11 +103,13 @@ func setupLogger() zerolog.Logger {
 		MaxAge:     28, // days
 	}
 
+	// --8<-- [start:syslog-logger]
 	var zsyslog zerolog.SyslogWriter
-	zsyslog, err = syslog.Dial("", "", syslog.LOG_INFO|syslog.LOG_LOCAL6, "ndk-greeter-go")
+	zsyslog, err = syslog.Dial("", "", syslog.LOG_INFO|syslog.LOG_LOCAL7, "ndk-greeter-go")
 	if err != nil {
 		panic(err)
 	}
+	// --8<-- [end:syslog-logger]
 
 	writers = append(writers, fileLogger, zsyslog)
 
