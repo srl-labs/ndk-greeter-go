@@ -11,8 +11,6 @@ BINARY=$(pwd)/build/${APPNAME}
 LABDIR=./lab
 LABFILE=${APPNAME}.clab.yml
 
-LDFLAGS="-s -w -X main.version=dev -X main.commit=$(git rev-parse --short HEAD)"
-
 #################################
 # Build functions
 #################################
@@ -47,6 +45,7 @@ function godot {
 }
 
 function format {
+	echo "Formatting code"
 	gofumpt
 	godot
 	# format the run.sh file
@@ -59,6 +58,8 @@ function build-app {
 	echo "Building application"
 	mkdir -p ${BIN_DIR}
 	go mod tidy
+
+    LDFLAGS="-s -w -X main.version=dev -X main.commit=$(git rev-parse --short HEAD)"
 
 	if [[ -n "${NDK_DEBUG}" ]]; then
 		go build -race -o ${BINARY} -ldflags="${LDFLAGS}" .
@@ -173,6 +174,7 @@ function compress-bin {
 
 # package packages the binary into a deb package by default
 # if `rpm` is passed as an argument, it will create an rpm package
+# binary should be already built before calling this function
 function package {
 	local packager=${1:-deb}
 	docker run --rm -v $(pwd):/tmp -w /tmp goreleaser/nfpm package \
