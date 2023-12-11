@@ -175,6 +175,7 @@ function compress-bin {
 # package packages the binary into a deb package by default
 # if `rpm` is passed as an argument, it will create an rpm package
 # binary should be already built before calling this function
+# and optionally compressed with `compress-bin` func.
 function package {
 	local packager=${1:-deb}
 	docker run --rm -v $(pwd):/tmp -w /tmp goreleaser/nfpm package \
