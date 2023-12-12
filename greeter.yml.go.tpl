@@ -4,9 +4,8 @@
 # --8<-- [start:snip]
 greeter:
   path: /usr/local/bin
-  launch-command: /usr/local/bin/greeter
-  version-command: /usr/local/bin/greeter --version
-  search-command: /usr/local/bin/greeter
+  launch-command: {{if ne (env.Getenv "NDK_DEBUG") "" }}{{ "/debug/dlv --listen=:7000"}}{{ if ne (env.Getenv "NDK_DEBUG") "" }} {{ "--continue --accept-multiclient" }}{{ end }} {{ "--headless=true --log=true --api-version=2 exec"}} {{ end }}greeter
+  version-command: greeter --version
   failure-action: wait=10
   config-delivery-format: json
   yang-modules:

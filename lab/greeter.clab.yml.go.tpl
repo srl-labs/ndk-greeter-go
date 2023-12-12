@@ -8,7 +8,7 @@ topology:
       image: ghcr.io/nokia/srlinux:23.10.1
       exec:
         - touch /tmp/.ndk-dev-mode
-        {{- if eq (env.Getenv "DEBUG_MODE") "true" }}
+        {{- if ne (env.Getenv "NDK_DEBUG") "" }}
         - /debug/prepare-debug.sh
         {{- end }}
       binds:
@@ -17,6 +17,6 @@ topology:
         - ../yang:/opt/greeter/yang # yang modules
         - ../logs/srl:/var/log/srlinux # expose srlinux logs
         - ../logs/greeter/:/var/log/greeter # expose greeter log file
-        {{- if eq (env.Getenv "DEBUG_MODE") "true" }}
+        {{- if ne (env.Getenv "NDK_DEBUG") "" }}
         - ../debug/:/debug/
         {{- end }}

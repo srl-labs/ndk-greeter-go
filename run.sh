@@ -3,6 +3,7 @@
 set -o errexit
 set -o pipefail
 
+# abs path to the directory that hosts the run.sh script
 BASE_DIR=$(dirname "$(readlink -f "$0")")
 APPNAME=greeter
 GOPKGNAME=${APPNAME}
@@ -12,7 +13,18 @@ LABDIR=${BASE_DIR}/lab
 LABFILE=${APPNAME}.clab.yml
 
 
-LDFLAGS="-s -w -X main.version=dev -X main.commit=$(git rev-parse --short HEAD)"
+COMMON_LDFLAGS="-X main.version=dev -X main.commit=$(git rev-parse --short HEAD)"
+
+if [ -z "$NDK_DEBUG" ]; then
+    # when not in debug mode use linker flags -s -w to strip the binary
+    LDFLAGS="-ldflags=\"-s -w $COMMON_LDFLAGS\""
+else
+    # when NDK_DEBUG is set
+    LDFLAGS="-ldflags=\"$COMMON_LDFLAGS\""
+    GCFLAGS="-gcflags=\"all=-N -l\""
+    # link the dlv binary to the debug directory
+    link-dlv
+fi
 
 #################################
 # Build functions
@@ -57,7 +69,9 @@ function build-app {
     echo "Building application"
     mkdir -p ${BIN_DIR}
     go mod tidy
-    go build -gcflags "all=-N -l" -race -o ${BINARY} .
+    CMD="go build ${LDFLAGS} ${GCFLAGS} -race -o ${BINARY} ."
+    echo "Executing: $CMD"
+    eval $CMD
 }
 
 #################################
@@ -65,6 +79,7 @@ function build-app {
 #################################
 function deploy-all {
     check-clab-version
+	template-files
     build-app
     deploy-lab
     install-app
@@ -81,6 +96,11 @@ function deploy-all {
 function build-restart-app {
     build-app
     restart-app
+}
+
+function template-files {
+	template-lab
+	template-app
 }
 
 
@@ -107,9 +127,28 @@ function check-clab-version {
     fi
 }
 
+# template lab file. When NDK_DEBUG env var is set to any value
+# the debug section is added to the lab file
+function template-lab {
+	echo "Templating lab file"
+	sudo docker run --rm -e NDK_DEBUG=${NDK_DEBUG} -v ${BASE_DIR}/lab/:/tmp/ \
+		hairyhenderson/gomplate:v3.11-slim \
+		--file /tmp/${LABFILE}.go.tpl -o /tmp/${LABFILE}
+}
+
 #################################
 # App functions
 #################################
+
+# template app file. When NDK_DEBUG env var is set to any value
+# the debug section is added to the app configuration file.
+function template-app {
+	echo "Templating app file"
+	sudo docker run --rm -e NDK_DEBUG=${NDK_DEBUG} -e NOWAIT=${NOWAIT} \
+		-v ${BASE_DIR}/${APPNAME}.yml.go.tpl:/tmp/${APPNAME}.yml.go.tpl \
+		-v ${BASE_DIR}/${APPNAME}.yml:/tmp/${APPNAME}.yml \
+		hairyhenderson/gomplate:v3.11-slim --file /tmp/${APPNAME}.yml.go.tpl -o /tmp/${APPNAME}.yml
+}
 
 # install-app creates app symlinks and reloads app_mgr
 # which effectively installs and starts the app as app_mgr
@@ -177,11 +216,8 @@ function package {
 }
 
 # links the dlv binary to the debug directory as a hardlink
-# from there it is available in the srl container
-function prepareDebug {
-    rm ${LABDIR}/${LABFILE} -f
-    docker run --rm -e DEBUG_MODE=${DEBUG_MODE} -v ${BASE_DIR}/lab/:/tmp/ hairyhenderson/gomplate:stable --input-dir /tmp/ --output-map='/tmp/{{ .in | strings.TrimSuffix ".tpl" }}'
-    docker run --rm -e DEBUG_MODE=${DEBUG_MODE} -e NOWAIT=${NOWAIT} -v ${BASE_DIR}/greeter.yml.tpl:/tmp/greeter.yml.tpl -v ${BASE_DIR}/greeter.yml:/tmp/greeter.yml hairyhenderson/gomplate:stable --file /tmp/greeter.yml.tpl -o /tmp/greeter.yml
+# making it available to the greeter container when running in debug mode.
+function link-dlv {
     ln -f $(which dlv) ${BASE_DIR}/debug/
 }
 
@@ -211,6 +247,3 @@ function help {
 # This idea is heavily inspired by: https://github.com/adriancooney/Taskfile
 TIMEFORMAT=$'\nTask completed in %3lR'
 time "${@:-help}"
-
-
-set -e
