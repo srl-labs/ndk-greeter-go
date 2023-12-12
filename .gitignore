@@ -33,10 +33,7 @@ logs
 # agent binary
 build
 
-# some debug log files
+# apt debug log
 debug/apt.log
-debug/ns-socat.log
-debug/socat.log
-
 # hard-linked dlv binary
 debug/dlv

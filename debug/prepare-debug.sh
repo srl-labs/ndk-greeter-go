@@ -12,8 +12,8 @@ ip netns exec srbase-mgmt bash -c "DEBIAN_FRONTEND=noninteractive ; apt-get upda
 DPORT="${DEBUG_PORT:-7000}"
 echo "Running socat on port ${DPORT}"
 # Note: tcp6-listen will listen for v4 and v6 implicitly
-ip netns exec srbase-mgmt socat -d -d -d -lf ns-socat.log TCP6-LISTEN:${DPORT},reuseaddr,fork UNIX-CLIENT:/tmp/socatsock &
-ip netns exec srbase socat -d -d -d -lf socat.log UNIX-LISTEN:/tmp/socatsock,reuseaddr,fork TCP:127.0.0.1:${DPORT} &
+ip netns exec srbase-mgmt socat -d -d -d -lf /tmp/mgmt-socat.log TCP6-LISTEN:${DPORT},reuseaddr,fork UNIX-CLIENT:/tmp/socatsock &
+ip netns exec srbase socat -d -d -d -lf /tmp/base-socat.log UNIX-LISTEN:/tmp/socatsock,reuseaddr,fork TCP:127.0.0.1:${DPORT} &
 
 
 # Add a CPM-Filter rule
