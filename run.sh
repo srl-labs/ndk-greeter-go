@@ -59,7 +59,7 @@ function build-app {
 	mkdir -p ${BIN_DIR}
 	go mod tidy
 
-    LDFLAGS="-s -w -X main.version=dev -X main.commit=$(git rev-parse --short HEAD)"
+	LDFLAGS="-s -w -X main.version=dev -X main.commit=$(git rev-parse --short HEAD)"
 
 	if [[ -n "${NDK_DEBUG}" ]]; then
 		go build -race -o ${BINARY} -ldflags="${LDFLAGS}" .
