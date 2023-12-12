@@ -3,11 +3,12 @@
 set -o errexit
 set -o pipefail
 
+BASE_DIR=$(dirname "$(readlink -f "$0")")
 APPNAME=greeter
 GOPKGNAME=${APPNAME}
-BIN_DIR=$(pwd)/build
-BINARY=$(pwd)/build/${APPNAME}
-LABDIR=./lab
+BIN_DIR=${BASE_DIR}/build
+BINARY=${BASE_DIR}/build/${APPNAME}
+LABDIR=${BASE_DIR}/lab
 LABFILE=${APPNAME}.clab.yml
 
 
@@ -18,13 +19,12 @@ LDFLAGS="-s -w -X main.version=dev -X main.commit=$(git rev-parse --short HEAD)"
 #################################
 function lint-yang {
     echo "Linting YANG files"
-    docker run --rm -v $(pwd):/work ghcr.io/hellt/yanglint yang/*.yang
+    docker run --rm -v ${BASE_DIR}:/work ghcr.io/hellt/yanglint yang/*.yang
 }
 
 function lint-yaml {
     echo "Linting YAML files"
-    docker run --rm -v $(pwd)/${APPNAME}.yml:/data/${APPNAME}.yml cytopia/yamllint -d relaxed .
-
+    docker run --rm -v ${BASE_DIR}/${APPNAME}.yml:/data/${APPNAME}.yml cytopia/yamllint -d relaxed .
 }
 
 function lint {
@@ -32,10 +32,10 @@ function lint {
     lint-yaml
 }
 
-GOFUMPT_CMD="docker run --rm -it -e GOFUMPT_SPLIT_LONG_LINES=on -v $(pwd):/work ghcr.io/hellt/gofumpt:0.3.1"
+GOFUMPT_CMD="docker run --rm -it -e GOFUMPT_SPLIT_LONG_LINES=on -v ${BASE_DIR}:/work ghcr.io/hellt/gofumpt:0.3.1"
 GOFUMPT_FLAGS="-l -w ."
 
-GODOT_CMD="docker run --rm -it -v $(pwd):/work ghcr.io/hellt/godot:1.4.11"
+GODOT_CMD="docker run --rm -it -v ${BASE_DIR}:/work ghcr.io/hellt/godot:1.4.11"
 GODOT_FLAGS="-w ."
 
 function gofumpt {
@@ -57,7 +57,7 @@ function build-app {
     echo "Building application"
     mkdir -p ${BIN_DIR}
     go mod tidy
-    go build -race -o ${BINARY} -ldflags="${LDFLAGS}" .
+    go build -gcflags "all=-N -l" -race -o ${BINARY} .
 }
 
 #################################
@@ -176,8 +176,17 @@ function package {
 	--packager ${packager}
 }
 
+# links the dlv binary to the debug directory as a hardlink
+# from there it is available in the srl container
+function prepareDebug {
+    rm ${LABDIR}/${LABFILE} -f
+    docker run --rm -e DEBUG_MODE=${DEBUG_MODE} -v ${BASE_DIR}/lab/:/tmp/ hairyhenderson/gomplate:stable --input-dir /tmp/ --output-map='/tmp/{{ .in | strings.TrimSuffix ".tpl" }}'
+    docker run --rm -e DEBUG_MODE=${DEBUG_MODE} -e NOWAIT=${NOWAIT} -v ${BASE_DIR}/greeter.yml.tpl:/tmp/greeter.yml.tpl -v ${BASE_DIR}/greeter.yml:/tmp/greeter.yml hairyhenderson/gomplate:stable --file /tmp/greeter.yml.tpl -o /tmp/greeter.yml
+    ln -f $(which dlv) ${BASE_DIR}/debug/
+}
+
 _run_sh_autocomplete() {
-    local current_word
+    local current_wor
     COMPREPLY=()
     current_word="${COMP_WORDS[COMP_CWORD]}"
 

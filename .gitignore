@@ -26,3 +26,11 @@ clab-*
 logs
 # agent binary
 build
+
+# some debug log files
+debug/apt.log
+debug/ns-socat.log
+debug/socat.log
+
+# hard-linked dlv binary
+debug/dlv
