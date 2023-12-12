@@ -97,6 +97,8 @@ function deploy-all {
 # requiring to re-deploy the lab
 function build-restart-app {
     build-app
+    reload-app_mgr
+    sleep 3 # wait 3s for app_mgr to reload
     restart-app
 }
 
