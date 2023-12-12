@@ -22,8 +22,10 @@ else
     # when NDK_DEBUG is set
     LDFLAGS="-ldflags=\"$COMMON_LDFLAGS\""
     GCFLAGS="-gcflags=\"all=-N -l\""
-    # link the dlv binary to the debug directory
-    link-dlv
+
+    # links the dlv binary to the debug directory as a hardlink
+    # making it available to the greeter container when running in debug mode.
+    ln -f $(which dlv) ${BASE_DIR}/debug/
 fi
 
 #################################
@@ -145,9 +147,9 @@ function template-lab {
 function template-app {
 	echo "Templating app file"
 	sudo docker run --rm -e NDK_DEBUG=${NDK_DEBUG} -e NOWAIT=${NOWAIT} \
-		-v ${BASE_DIR}/${APPNAME}.yml.go.tpl:/tmp/${APPNAME}.yml.go.tpl \
-		-v ${BASE_DIR}/${APPNAME}.yml:/tmp/${APPNAME}.yml \
-		hairyhenderson/gomplate:v3.11-slim --file /tmp/${APPNAME}.yml.go.tpl -o /tmp/${APPNAME}.yml
+		-v ${BASE_DIR}:/tmp \
+		hairyhenderson/gomplate:v3.11-slim \
+        --file /tmp/${APPNAME}.yml.go.tpl -o /tmp/${APPNAME}.yml
 }
 
 # install-app creates app symlinks and reloads app_mgr
@@ -213,12 +215,6 @@ function package {
 	--config /tmp/nfpm.yml \
 	--target /tmp/build \
 	--packager ${packager}
-}
-
-# links the dlv binary to the debug directory as a hardlink
-# making it available to the greeter container when running in debug mode.
-function link-dlv {
-    ln -f $(which dlv) ${BASE_DIR}/debug/
 }
 
 _run_sh_autocomplete() {
