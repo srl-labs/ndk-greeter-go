@@ -3,28 +3,42 @@
 set -o errexit
 set -o pipefail
 
+# abs path to the directory that hosts the run.sh script
+BASE_DIR=$(dirname "$(readlink -f "$0")")
 APPNAME=greeter
 GOPKGNAME=${APPNAME}
-BIN_DIR=$(pwd)/build
-BINARY=$(pwd)/build/${APPNAME}
-LABDIR=./lab
+BIN_DIR=${BASE_DIR}/build
+BINARY=${BASE_DIR}/build/${APPNAME}
+LABDIR=${BASE_DIR}/lab
 LABFILE=${APPNAME}.clab.yml
 
 
-LDFLAGS="-s -w -X main.version=dev -X main.commit=$(git rev-parse --short HEAD)"
+COMMON_LDFLAGS="-X main.version=dev -X main.commit=$(git rev-parse --short HEAD)"
+
+if [ -z "$NDK_DEBUG" ]; then
+    # when not in debug mode use linker flags -s -w to strip the binary
+    LDFLAGS="-ldflags=\"-s -w $COMMON_LDFLAGS\""
+else
+    # when NDK_DEBUG is set
+    LDFLAGS="-ldflags=\"$COMMON_LDFLAGS\""
+    GCFLAGS="-gcflags=\"all=-N -l\""
+
+    # links the dlv binary to the debug directory as a hardlink
+    # making it available to the greeter container when running in debug mode.
+    ln -f $(which dlv) ${BASE_DIR}/debug/
+fi
 
 #################################
 # Build functions
 #################################
 function lint-yang {
     echo "Linting YANG files"
-    docker run --rm -v $(pwd):/work ghcr.io/hellt/yanglint yang/*.yang
+    docker run --rm -v ${BASE_DIR}:/work ghcr.io/hellt/yanglint yang/*.yang
 }
 
 function lint-yaml {
     echo "Linting YAML files"
-    docker run --rm -v $(pwd)/${APPNAME}.yml:/data/${APPNAME}.yml cytopia/yamllint -d relaxed .
-
+    docker run --rm -v ${BASE_DIR}/${APPNAME}.yml:/data/${APPNAME}.yml cytopia/yamllint -d relaxed .
 }
 
 function lint {
@@ -32,10 +46,10 @@ function lint {
     lint-yaml
 }
 
-GOFUMPT_CMD="docker run --rm -it -e GOFUMPT_SPLIT_LONG_LINES=on -v $(pwd):/work ghcr.io/hellt/gofumpt:0.3.1"
+GOFUMPT_CMD="docker run --rm -it -e GOFUMPT_SPLIT_LONG_LINES=on -v ${BASE_DIR}:/work ghcr.io/hellt/gofumpt:0.3.1"
 GOFUMPT_FLAGS="-l -w ."
 
-GODOT_CMD="docker run --rm -it -v $(pwd):/work ghcr.io/hellt/godot:1.4.11"
+GODOT_CMD="docker run --rm -it -v ${BASE_DIR}:/work ghcr.io/hellt/godot:1.4.11"
 GODOT_FLAGS="-w ."
 
 function gofumpt {
@@ -57,7 +71,9 @@ function build-app {
     echo "Building application"
     mkdir -p ${BIN_DIR}
     go mod tidy
-    go build -race -o ${BINARY} -ldflags="${LDFLAGS}" .
+    CMD="go build ${LDFLAGS} ${GCFLAGS} -race -o ${BINARY} ."
+    echo "Executing: $CMD"
+    eval $CMD
 }
 
 #################################
@@ -65,6 +81,7 @@ function build-app {
 #################################
 function deploy-all {
     check-clab-version
+	template-files
     build-app
     deploy-lab
     install-app
@@ -80,7 +97,14 @@ function deploy-all {
 # requiring to re-deploy the lab
 function build-restart-app {
     build-app
+    reload-app_mgr
+    sleep 3 # wait 3s for app_mgr to reload
     restart-app
+}
+
+function template-files {
+	template-lab
+	template-app
 }
 
 
@@ -107,9 +131,28 @@ function check-clab-version {
     fi
 }
 
+# template lab file. When NDK_DEBUG env var is set to any value
+# the debug section is added to the lab file
+function template-lab {
+	echo "Templating lab file"
+	sudo docker run --rm -e NDK_DEBUG=${NDK_DEBUG} -v ${BASE_DIR}/lab/:/tmp/ \
+		hairyhenderson/gomplate:v3.11-slim \
+		--file /tmp/${LABFILE}.go.tpl -o /tmp/${LABFILE}
+}
+
 #################################
 # App functions
 #################################
+
+# template app file. When NDK_DEBUG env var is set to any value
+# the debug section is added to the app configuration file.
+function template-app {
+	echo "Templating app file"
+	sudo docker run --rm -e NDK_DEBUG=${NDK_DEBUG} -e NOWAIT=${NOWAIT} \
+		-v ${BASE_DIR}:/tmp \
+		hairyhenderson/gomplate:v3.11-slim \
+        --file /tmp/${APPNAME}.yml.go.tpl -o /tmp/${APPNAME}.yml
+}
 
 # install-app creates app symlinks and reloads app_mgr
 # which effectively installs and starts the app as app_mgr
@@ -202,6 +245,3 @@ function help {
 # This idea is heavily inspired by: https://github.com/adriancooney/Taskfile
 TIMEFORMAT=$'\nTask completed in %3lR'
 time "${@:-help}"
-
-
-set -e
