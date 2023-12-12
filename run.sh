@@ -186,7 +186,7 @@ function prepareDebug {
 }
 
 _run_sh_autocomplete() {
-    local current_wor
+    local current_word
     COMPREPLY=()
     current_word="${COMP_WORDS[COMP_CWORD]}"
 
