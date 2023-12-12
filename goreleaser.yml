@@ -1,0 +1,55 @@
+project_name: ndk-greeter-go
+builds:
+  - env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X main.version={{.Version}}-{{.ShortCommit}}
+    goos:
+      - linux
+    goarch:
+      - amd64
+archives:
+  - name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else }}{{ .Arch }}{{ end }}
+checksum:
+  name_template: "checksums.txt"
+snapshot:
+  name_template: "{{ .Version }}"
+publishers:
+  - name: fury.io packages
+    ids:
+      - package # this id belongs to nfpm section and is used to only upload artifacts from nfpm
+    dir: "{{ dir .ArtifactPath }}"
+    cmd: curl -F package=@{{ .ArtifactName }} https://{{ .Env.FURY_TOKEN }}@push.fury.io/srlinux/
+release:
+  prerelease: auto
+changelog:
+  use: github-native
+
+nfpms:
+  - id: package
+    vendor: Nokia
+    homepage: https://github.com/karimra/srl-prometheus-exporter
+    maintainer: Karim Radhouani <karim.radhouani@nokia.com>
+    description: A Prometheus exporter for Nokia SR Linux
+    formats:
+      - rpm
+      - deb
+    license: "BSD 2"
+    bindir: /usr/local/bin/
+    contents:
+      - src: ./yang/prometheus-exporter.yang
+        dst: /opt/prometheus-exporter/yang/prometheus-exporter.yang
+
+      - src: ./yml/prometheus-exporter.yml
+        dst: /etc/opt/srlinux/appmgr/prometheus-exporter.yml
+
+      - src: ./metrics.yaml
+        dst: /opt/prometheus-exporter/metrics.yaml
+    scripts:
+      postinstall: "scripts/postinstall.sh"
+      postremove: "scripts/postremove.sh"
