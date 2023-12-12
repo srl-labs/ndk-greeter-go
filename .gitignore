@@ -1,5 +1,6 @@
 # IDE local settings
 .vscode
+!.vscode/launch.json
 .idea
 
 # common unneeded files
