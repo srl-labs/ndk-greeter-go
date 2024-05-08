@@ -9,7 +9,7 @@ require (
 	github.com/openconfig/gnmic/pkg/target v0.1.1
 	github.com/rs/zerolog v1.31.0
 	google.golang.org/grpc v1.59.0
-	google.golang.org/protobuf v1.31.0
+	google.golang.org/protobuf v1.33.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
