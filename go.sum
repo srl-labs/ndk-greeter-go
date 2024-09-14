@@ -31,12 +31,6 @@ github.com/openconfig/gnmi v0.10.0 h1:kQEZ/9ek3Vp2Y5IVuV2L/ba8/77TgjdXg505QXvYmg
 github.com/openconfig/gnmi v0.10.0/go.mod h1:Y9os75GmSkhHw2wX8sMsxfI7qRGAEcDh8NTa5a8vj6E=
 github.com/openconfig/gnmic/pkg/api v0.1.5 h1:vnhB72kqMzJyjnIOOpIdLHFUDe01ySMd5+PZLKtYsjY=
 github.com/openconfig/gnmic/pkg/api v0.1.5/go.mod h1:/q9bvX5mSie8jCTo1kWnP0gJYtJB0OabDUqZ813/tjk=
-github.com/openconfig/gnmic/pkg/target v0.1.4 h1:zO7gOke9RVnkockM2lZv5MqgNdfysUSqxyp91OnEjOQ=
-github.com/openconfig/gnmic/pkg/target v0.1.4/go.mod h1:hNmkYvuYFaUtbFWVm0PuvctJ70ku+fotxZxmkr5oeWM=
-github.com/openconfig/gnmic/pkg/types v0.1.2 h1:FRjERZrbcuqhwRKHZ7ux4UXr4fc1DlgXvH37Iysu4Co=
-github.com/openconfig/gnmic/pkg/types v0.1.2/go.mod h1:Gwc9suBy/s17bP8BaCrp3dE5E+RkcHqVIkFqdXopog4=
-github.com/openconfig/gnmic/pkg/utils v0.1.0 h1:MqRhW8oJdPpBb1UprbnpDxciBJVjl/Gw97xuNoBG3Vs=
-github.com/openconfig/gnmic/pkg/utils v0.1.0/go.mod h1:DQm/e8cdRwdmUORjODWteDU0HG0CWNYBAhLWqnPQegE=
 github.com/openconfig/grpctunnel v0.1.0 h1:EN99qtlExZczgQgp5ANnHRC/Rs62cAG+Tz2BQ5m/maM=
 github.com/openconfig/grpctunnel v0.1.0/go.mod h1:G04Pdu0pml98tdvXrvLaU+EBo3PxYfI9MYqpvdaEHLo=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=

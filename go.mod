@@ -24,8 +24,6 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/openconfig/gnmi v0.10.0 // indirect
-	github.com/openconfig/gnmic/pkg/types v0.1.2 // indirect
-	github.com/openconfig/gnmic/pkg/utils v0.1.0 // indirect
 	github.com/openconfig/grpctunnel v0.1.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/oauth2 v0.17.0 // indirect
