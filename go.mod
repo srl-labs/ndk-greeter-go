@@ -6,11 +6,10 @@ toolchain go1.21.6
 
 require (
 	github.com/RackSec/srslog v0.0.0-20180709174129-a4725f04ec91
-	github.com/nokia/srlinux-ndk-go v0.4.0-rc1
 	github.com/openconfig/gnmic/pkg/api v0.1.5
 	github.com/rs/zerolog v1.31.0
+	github.com/srl-labs/bond v0.0.0-00010101000000-000000000000
 	google.golang.org/grpc v1.61.0
-	google.golang.org/protobuf v1.33.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
@@ -23,15 +22,16 @@ require (
 	github.com/jhump/protoreflect v1.15.3 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/nokia/srlinux-ndk-go v0.4.0-rc1 // indirect
 	github.com/openconfig/gnmi v0.10.0 // indirect
 	github.com/openconfig/grpctunnel v0.1.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/oauth2 v0.17.0 // indirect
-	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240123012728-ef4313101c80 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 )
 
-replace github.com/sr-linux/bond => ../bond
+replace github.com/srl-labs/bond => ../bond
