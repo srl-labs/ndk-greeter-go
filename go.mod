@@ -32,3 +32,11 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 )
+
+// this is a fix to a weird deps issue
+// cloud.google.com/go/compute/metadata in multiple modules:
+// cloud.google.com/go v0.26.0
+// cloud.google.com/go/compute/metadata v0.5.1
+// not quite sure who is relient on v0.26.0 in the build cache, but this old package had a metadata module,
+// and after v0.100 it has been moved to a separate module, so this is a workaround to force the correct version selection
+replace cloud.google.com/go => cloud.google.com/go v0.115.1
