@@ -81,7 +81,7 @@ function build-app {
 #################################
 function deploy-all {
     check-clab-version
-	template-files
+    template-files
     build-app
     deploy-lab
     install-app

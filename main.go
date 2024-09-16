@@ -20,14 +20,6 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-// --8<-- [start:pkg-main-const].
-const (
-	appName = "greeter"
-	appRoot = "/" + appName
-)
-
-// --8<-- [end:pkg-main-const]
-
 // --8<-- [start:pkg-main-vars].
 var (
 	version = "0.0.0"
@@ -53,17 +45,17 @@ func main() {
 	// --8<-- [start:metadata]
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	ctx = metadata.AppendToOutgoingContext(ctx, "agent_name", appName)
+	ctx = metadata.AppendToOutgoingContext(ctx, "agent_name", greeter.AppName)
 	// --8<-- [end:metadata]
 
 	// --8<-- [start:main-init-bond-agent]
 	opts := []bond.Option{
 		bond.WithLogger(&logger),
 		bond.WithContext(ctx, cancel),
-		bond.WithAppRootPath(appRoot),
+		bond.WithAppRootPath(greeter.AppRoot),
 	}
 
-	agent, errs := bond.NewAgent(appName, opts...)
+	agent, errs := bond.NewAgent(greeter.AppName, opts...)
 	for _, err := range errs {
 		if err != nil {
 			logger.Fatal().Err(err).Msg("Failed to create agent")
@@ -77,7 +69,7 @@ func main() {
 	// --8<-- [end:main-init-bond-agent]
 
 	// --8<-- [end:main-init-app]
-	app := greeter.New(appName, &logger, agent)
+	app := greeter.New(&logger, agent)
 	app.Start(ctx)
 	// --8<-- [end:main-init-app]
 }

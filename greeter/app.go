@@ -11,6 +11,14 @@ import (
 	"github.com/srl-labs/bond"
 )
 
+// --8<-- [start:pkg-main-const].
+const (
+	AppName = "greeter"
+	AppRoot = "/" + AppName
+)
+
+// --8<-- [end:pkg-main-const]
+
 // App is the greeter application struct.
 // --8<-- [start:app-struct].
 type App struct {
@@ -26,9 +34,9 @@ type App struct {
 // NewApp creates a new Greeter App instance and connects to NDK socket.
 // It also creates the NDK service clients and registers the agent with NDK.
 // --8<-- [start:new-app].
-func New(name string, logger *zerolog.Logger, agent *bond.Agent) *App {
+func New(logger *zerolog.Logger, agent *bond.Agent) *App {
 	return &App{
-		Name: name,
+		Name: AppName,
 
 		configState: &ConfigState{},
 
