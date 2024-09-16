@@ -36,13 +36,11 @@ type App struct {
 // --8<-- [start:new-app].
 func New(logger *zerolog.Logger, agent *bond.Agent) *App {
 	return &App{
-		Name: AppName,
+		Name:     AppName,
+		NDKAgent: agent,
 
 		configState: &ConfigState{},
-
-		logger: logger,
-
-		NDKAgent: agent,
+		logger:      logger,
 	}
 }
 
