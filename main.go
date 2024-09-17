@@ -103,6 +103,12 @@ func setupLogger() zerolog.Logger {
 		MaxAge:     28, // days
 	}
 
+	// Set log file read permissions for everyone
+	err = os.Chmod("/var/log/greeter/greeter.log", 0644)
+	if err != nil {
+		panic(err)
+	}
+
 	// --8<-- [start:syslog-logger]
 	var zsyslog zerolog.SyslogWriter
 	zsyslog, err = syslog.Dial("", "", syslog.LOG_INFO|syslog.LOG_LOCAL7, "ndk-greeter-go")
