@@ -11,13 +11,13 @@ import (
 	"github.com/srl-labs/bond"
 )
 
-// --8<-- [start:pkg-main-const].
+// --8<-- [start:pkg-greeter-const].
 const (
 	AppName = "greeter"
 	AppRoot = "/" + AppName
 )
 
-// --8<-- [end:pkg-main-const]
+// --8<-- [end:pkg-greeter-const]
 
 // App is the greeter application struct.
 // --8<-- [start:app-struct].
