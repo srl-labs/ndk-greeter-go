@@ -16,7 +16,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/srl-labs/bond"
 	"github.com/srl-labs/ndk-greeter-go/greeter"
-	"google.golang.org/grpc/metadata"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -45,7 +44,6 @@ func main() {
 	// --8<-- [start:metadata]
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	ctx = metadata.AppendToOutgoingContext(ctx, "agent_name", greeter.AppName)
 	// --8<-- [end:metadata]
 
 	// --8<-- [start:main-init-bond-agent]
