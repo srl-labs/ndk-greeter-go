@@ -74,9 +74,7 @@ func (a *App) getUptime() (string, error) {
 	a.logger.Info().Msg("Fetching SR Linux uptime value")
 
 	// create a GetRequest
-	getReq, err := api.NewGetRequest(
-		api.Path("/system/information/last-booted"),
-		api.EncodingPROTO())
+	getReq, err := bond.NewGetRequest("/system/information/last-booted", api.EncodingPROTO())
 	if err != nil {
 		return "", err
 	}
@@ -86,7 +84,7 @@ func (a *App) getUptime() (string, error) {
 	}
 	a.logger.Info().Msgf("GetResponse: %+v", getResp)
 
-	return getResp.Notification[0].Update[0].GetVal().GetStringVal(), nil
+	return getResp.GetNotification()[0].GetUpdate()[0].GetVal().GetStringVal(), nil
 }
 
 // --8<-- [end:get-uptime].
