@@ -66,7 +66,7 @@ func main() {
 	}
 	// --8<-- [end:main-init-bond-agent]
 
-	// --8<-- [end:main-init-app]
+	// --8<-- [start:main-init-app]
 	app := greeter.New(&logger, agent)
 	app.Start(ctx)
 	// --8<-- [end:main-init-app]
