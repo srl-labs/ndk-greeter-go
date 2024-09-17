@@ -28,12 +28,6 @@ github.com/openconfig/gnmi v0.11.0 h1:H7pLIb/o3xObu3+x0Fv9DCK7TH3FUh7mNwbYe+34hF
 github.com/openconfig/gnmi v0.11.0/go.mod h1:9oJSQPPCpNvfMRj8e4ZoLVAw4wL8HyxXbiDlyuexCGU=
 github.com/openconfig/gnmic/pkg/api v0.1.8 h1:3N9oFduU204Ta3g7r3dC4pcYdT/Dr7PrSC13Lyc7Ymc=
 github.com/openconfig/gnmic/pkg/api v0.1.8/go.mod h1:WbME6stT7zcYzQnCwQO42a23WgZRqFQVGVsp0C4FHtc=
-github.com/openconfig/gnmic/pkg/target v0.1.4 h1:zO7gOke9RVnkockM2lZv5MqgNdfysUSqxyp91OnEjOQ=
-github.com/openconfig/gnmic/pkg/target v0.1.4/go.mod h1:hNmkYvuYFaUtbFWVm0PuvctJ70ku+fotxZxmkr5oeWM=
-github.com/openconfig/gnmic/pkg/types v0.1.2 h1:FRjERZrbcuqhwRKHZ7ux4UXr4fc1DlgXvH37Iysu4Co=
-github.com/openconfig/gnmic/pkg/types v0.1.2/go.mod h1:Gwc9suBy/s17bP8BaCrp3dE5E+RkcHqVIkFqdXopog4=
-github.com/openconfig/gnmic/pkg/utils v0.1.1 h1:LgfI/c/O8VpuZg1RS9G6XEeRhAQSlOalE52/8tsdf00=
-github.com/openconfig/gnmic/pkg/utils v0.1.1/go.mod h1:DQm/e8cdRwdmUORjODWteDU0HG0CWNYBAhLWqnPQegE=
 github.com/openconfig/grpctunnel v0.1.0 h1:EN99qtlExZczgQgp5ANnHRC/Rs62cAG+Tz2BQ5m/maM=
 github.com/openconfig/grpctunnel v0.1.0/go.mod h1:G04Pdu0pml98tdvXrvLaU+EBo3PxYfI9MYqpvdaEHLo=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
@@ -42,8 +36,8 @@ github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZN
 github.com/rs/xid v1.5.0/go.mod h1:trrq9SKmegXys3aeAKXMUTdJsYXVwGY3RLcfgqegfbg=
 github.com/rs/zerolog v1.33.0 h1:1cU2KZkvPxNyfgEmhHAz/1A9Bz+llsdYzklWFzgp0r8=
 github.com/rs/zerolog v1.33.0/go.mod h1:/7mN4D5sKwJLZQ2b/znpjC3/GQWY/xaDXUM0kKWRHss=
-github.com/srl-labs/bond v0.0.0-20231211123045-294026c20599 h1:5zcwdbXj5QeYjgNOQ1rPsl5HyYSLue0Em7EoWd7M5fc=
-github.com/srl-labs/bond v0.0.0-20231211123045-294026c20599/go.mod h1:poec28Zw1PVQlh88uDd5S2xJw+vdI6k78F+VE1cN5I8=
+github.com/srl-labs/bond v0.1.0-rc1 h1:rUe4vY2czf9g6wmdYKjA0VlBtuoIDM/IQWaALe8j18w=
+github.com/srl-labs/bond v0.1.0-rc1/go.mod h1:6n1azbfvG156cifOgPvNuDfFB3/PYjwELtaxKiK4JDA=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 golang.org/x/net v0.29.0 h1:5ORfpBpCs4HzDYoodCDBbwHzdR5UrLBZ3sOnUJmFoHo=

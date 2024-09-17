@@ -6,7 +6,7 @@ require (
 	github.com/RackSec/srslog v0.0.0-20180709174129-a4725f04ec91
 	github.com/openconfig/gnmic/pkg/api v0.1.8
 	github.com/rs/zerolog v1.33.0
-	github.com/srl-labs/bond v0.0.0-20231211123045-294026c20599
+	github.com/srl-labs/bond v0.1.0-rc1
 	google.golang.org/grpc v1.66.2
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
@@ -21,9 +21,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/nokia/srlinux-ndk-go v0.4.0-rc1 // indirect
 	github.com/openconfig/gnmi v0.11.0 // indirect
-	github.com/openconfig/gnmic/pkg/target v0.1.4 // indirect
-	github.com/openconfig/gnmic/pkg/types v0.1.2 // indirect
-	github.com/openconfig/gnmic/pkg/utils v0.1.1 // indirect
 	github.com/openconfig/grpctunnel v0.1.0 // indirect
 	golang.org/x/net v0.29.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
@@ -40,3 +37,6 @@ require (
 // not quite sure who is relient on v0.26.0 in the build cache, but this old package had a metadata module,
 // and after v0.100 it has been moved to a separate module, so this is a workaround to force the correct version selection
 replace cloud.google.com/go => cloud.google.com/go v0.115.1
+
+// same thing for google.golang.org/genproto https://github.com/googleapis/go-genproto/issues/1015
+replace google.golang.org/genproto => google.golang.org/genproto v0.0.0-20240903143218-8af14fe29dc1
