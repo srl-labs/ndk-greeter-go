@@ -1,3 +1,4 @@
+version: 2
 project_name: greeter
 builds:
   - id: bin
@@ -23,18 +24,23 @@ archives:
     files:
       - yang/**/*
       - greeter.yml
+
 checksum:
   name_template: checksums.txt
+
 snapshot:
   name_template: "{{ .Tag }}-next"
+
 publishers:
   - name: fury.io deb/rpm packages
     ids:
       - greeter-nfpms # this id belongs to nfpm section and is used to only upload artifacts from nfpm
     dir: "{{ dir .ArtifactPath }}"
     cmd: curl -F package=@{{ .ArtifactName }} https://{{ .Env.FURY_TOKEN }}@push.fury.io/netdevops/
+
 release:
   prerelease: auto
+
 changelog:
   use: github-native
 
