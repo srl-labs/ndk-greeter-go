@@ -15,15 +15,15 @@ builds:
     goarch:
       - amd64
 
-upx:
-  - enabled: true
-    compress: best
+# upx:
+#   - enabled: true
+#     compress: best
 
 archives:
   - name_template: '{{ .ProjectName }}_{{ replace .Version "v" "" }}_{{ .Os }}_{{ .Arch }}'
     files:
-      - yang/**/*
-      - greeter.yml
+      - ./yang/*
+      - "./{{ .ProjectName }}.yml"
 
 checksum:
   name_template: checksums.txt
@@ -58,8 +58,6 @@ nfpms:
       - deb
     bindir: /usr/local/bin
     contents:
-      - src: ./{{ .ProjectName }}
-        dst: /usr/local/bin/
       - src: ./yang
         dst: /opt/{{ .ProjectName }}/yang
       - src: ./{{ .ProjectName }}.yml
