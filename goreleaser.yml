@@ -29,7 +29,7 @@ checksum:
   name_template: checksums.txt
 
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  version_template: "{{ .Tag }}-next"
 
 publishers:
   - name: fury.io deb/rpm packages
