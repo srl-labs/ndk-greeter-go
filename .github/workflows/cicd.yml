@@ -39,6 +39,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
+      - name: Template app yaml
+        run: |
+          ./run.sh template-app
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
