@@ -1,0 +1,50 @@
+name: Test, Build and Publish NDK app
+
+"on":
+  push:
+    branches: ["main"]
+    tags:
+      - "v*"
+  pull_request:
+
+env:
+  GO_VER: "1.22.6"
+  GORELEASER_VER: v2.3.2
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: WillAbides/setup-go-faster@v1.14.0
+        with:
+          go-version: ${{ env.GO_VER }}
+
+      - name: Cache go modules
+        uses: actions/cache@v4
+        with:
+          # In order:
+          # * Module download cache
+          # * Build cache (Linux)
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: ${{ env.GORELEASER_VER }}
+          args: release --clean --verbose
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FURY_TOKEN: ${{ secrets.FURY_PUSH_TOKEN }}
