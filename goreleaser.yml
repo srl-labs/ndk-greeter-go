@@ -47,7 +47,7 @@ changelog:
 nfpms:
   - id: greeter-nfpms
     file_name_template: '{{ .ProjectName }}_{{ replace .Version "v" "" }}_{{ .Os }}_{{ .Arch }}'
-    package_name: ndk-greeter-go
+    package_name: ndk-{{ .ProjectName }}-go
     maintainer: Roman Dodin <dodin.roman@gmail.com>
     homepage: https://learn.srlinux.dev
     description: |
@@ -58,9 +58,9 @@ nfpms:
       - deb
     bindir: /usr/local/bin
     contents:
-      - src: ./greeter
+      - src: ./{{ .ProjectName }}
         dst: /usr/local/bin/
       - src: ./yang
-        dst: /opt/greeter/yang
-      - src: ./greeter.yml
+        dst: /opt/{{ .ProjectName }}/yang
+      - src: ./{{ .ProjectName }}.yml
         dst: /etc/opt/srlinux/appmgr/
