@@ -103,8 +103,8 @@ function build-restart-app {
 }
 
 function template-files {
-	template-lab
-	template-app
+    template-lab
+    template-app
 }
 
 
@@ -134,10 +134,10 @@ function check-clab-version {
 # template lab file. When NDK_DEBUG env var is set to any value
 # the debug section is added to the lab file
 function template-lab {
-	echo "Templating lab file"
-	sudo docker run --rm -e NDK_DEBUG=${NDK_DEBUG} -v ${BASE_DIR}/lab/:/tmp/ \
-		hairyhenderson/gomplate:v3.11-slim \
-		--file /tmp/${LABFILE}.go.tpl -o /tmp/${LABFILE}
+    echo "Templating lab file"
+    sudo docker run --rm -e NDK_DEBUG=${NDK_DEBUG} -v ${BASE_DIR}/lab/:/tmp/ \
+        hairyhenderson/gomplate:v3.11-slim \
+        --file /tmp/${LABFILE}.go.tpl -o /tmp/${LABFILE}
 }
 
 #################################
@@ -147,10 +147,10 @@ function template-lab {
 # template app file. When NDK_DEBUG env var is set to any value
 # the debug section is added to the app configuration file.
 function template-app {
-	echo "Templating app file"
-	sudo docker run --rm -e NDK_DEBUG=${NDK_DEBUG} -e NOWAIT=${NOWAIT} \
-		-v ${BASE_DIR}:/tmp \
-		hairyhenderson/gomplate:v3.11-slim \
+    echo "Templating app file"
+    sudo docker run --rm -e NDK_DEBUG=${NDK_DEBUG} -e NOWAIT=${NOWAIT} \
+        -v ${BASE_DIR}:/tmp \
+        hairyhenderson/gomplate:v3.11-slim \
         --file /tmp/${APPNAME}.yml.go.tpl -o /tmp/${APPNAME}.yml
 }
 
@@ -205,18 +205,19 @@ function reload-app_mgr {
 function compress-bin {
     rm -f build/compressed
     chmod 777 build/${APPNAME}
-	docker run --rm -v $(pwd):/work ghcr.io/hellt/upx:4.0.2-r0 --best --lzma -o build/compressed build/${APPNAME}
-	mv build/compressed build/${APPNAME}
+    docker run --rm -v $(pwd):/work ghcr.io/hellt/upx:4.0.2-r0 --best --lzma -o build/compressed build/${APPNAME}
+    mv build/compressed build/${APPNAME}
 }
 
 # package packages the binary into a deb package by default
 # if `rpm` is passed as an argument, it will create an rpm package
 function package {
+    compress-bin
     local packager=${1:-deb}
-	docker run --rm -v $(pwd):/tmp -w /tmp goreleaser/nfpm package \
-	--config /tmp/nfpm.yml \
-	--target /tmp/build \
-	--packager ${packager}
+    docker run --rm -v $(pwd):/tmp -w /tmp ghcr.io/goreleaser/nfpm:v2.40.0 package \
+    --config /tmp/nfpm.yml \
+    --target /tmp/build \
+    --packager ${packager}
 }
 
 _run_sh_autocomplete() {
