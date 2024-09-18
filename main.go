@@ -95,18 +95,14 @@ func setupLogger() zerolog.Logger {
 		writers = append(writers, consoleLogger)
 	}
 
+	const logFile = "/var/log/greeter/greeter.log"
+
 	// A lumberjack logger with rotation settings.
 	fileLogger := &lumberjack.Logger{
-		Filename:   "/var/log/greeter/greeter.log",
+		Filename:   logFile,
 		MaxSize:    2, // megabytes
 		MaxBackups: 3,
 		MaxAge:     28, // days
-	}
-
-	// Set log file read permissions for everyone
-	err = os.Chmod("/var/log/greeter/greeter.log", 0644)
-	if err != nil {
-		panic(err)
 	}
 
 	// --8<-- [start:syslog-logger]
