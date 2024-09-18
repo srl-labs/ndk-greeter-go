@@ -56,6 +56,8 @@ nfpms:
     license: GNU GPLv3
     formats:
       - deb
+    scripts:
+      postinstall: postinstall.sh
     bindir: /usr/local/bin
     contents:
       - src: ./yang
