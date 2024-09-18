@@ -36,7 +36,7 @@ publishers:
     ids:
       - greeter-nfpms # this id belongs to nfpm section and is used to only upload artifacts from nfpm
     dir: "{{ dir .ArtifactPath }}"
-    cmd: curl -F package=@{{ .ArtifactName }} https://{{ .Env.FURY_TOKEN }}@push.fury.io/netdevops/
+    cmd: curl -F package=@{{ .ArtifactName }} https://{{ .Env.FURY_TOKEN }}@push.fury.io/srlinux/
 
 release:
   prerelease: auto
