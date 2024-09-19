@@ -12,6 +12,9 @@ BINARY=${BASE_DIR}/build/${APPNAME}
 LABDIR=${BASE_DIR}/lab
 LABFILE=${APPNAME}.clab.yml
 
+GOLANGCI_CMD="sudo docker run -t --rm -v $(pwd):/app -w /app golangci/golangci-lint:v1.60.3 golangci-lint"
+GOLANGCI_FLAGS="run -v ./..."
+
 COMMON_LDFLAGS="-X main.version=dev -X main.commit=$(git rev-parse --short HEAD)"
 
 if [ -z "$NDK_DEBUG" ]; then
@@ -28,7 +31,7 @@ else
 fi
 
 #################################
-# Build functions
+# Build and lint functions
 #################################
 function lint-yang {
 	echo "Linting YANG files"
@@ -38,6 +41,10 @@ function lint-yang {
 function lint-yaml {
 	echo "Linting YAML files"
 	docker run --rm -v ${BASE_DIR}/${APPNAME}.yml:/data/${APPNAME}.yml cytopia/yamllint -d relaxed .
+}
+
+function golangci-lint {
+    ${GOLANGCI_CMD} ${GOLANGCI_FLAGS}
 }
 
 function lint {

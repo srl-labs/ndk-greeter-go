@@ -13,7 +13,10 @@ func (a *App) updateState() {
 		return
 	}
 
-	a.NDKAgent.UpdateState(AppRoot, string(jsData))
+	err = a.NDKAgent.UpdateState(AppRoot, string(jsData))
+	if err != nil {
+		a.logger.Error().Msgf("failed to update state: %v", err)
+	}
 }
 
 // --8<-- [end:update-state].
