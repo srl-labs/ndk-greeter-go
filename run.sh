@@ -15,6 +15,9 @@ LABFILE=${APPNAME}.clab.yml
 GOLANGCI_CMD="sudo docker run -t --rm -v $(pwd):/app -w /app golangci/golangci-lint:v1.60.3 golangci-lint"
 GOLANGCI_FLAGS="run -v ./..."
 
+GOIMPORTS_CMD="sudo docker run --rm -it -v $(pwd):/work -w /work ghcr.io/hellt/goimports:v0.25.0"
+GOIMPORTS_FLAGS="-w ."
+
 COMMON_LDFLAGS="-X main.version=dev -X main.commit=$(git rev-parse --short HEAD)"
 
 if [ -z "$NDK_DEBUG" ]; then
@@ -44,7 +47,7 @@ function lint-yaml {
 }
 
 function golangci-lint {
-    ${GOLANGCI_CMD} ${GOLANGCI_FLAGS}
+	${GOLANGCI_CMD} ${GOLANGCI_FLAGS}
 }
 
 function lint {
@@ -66,7 +69,12 @@ function godot {
 	${GODOT_CMD} ${GODOT_FLAGS}
 }
 
+function goimports {
+	${GOIMPORTS_CMD} ${GOIMPORTS_FLAGS}
+}
+
 function format {
+	goimports
 	gofumpt
 	godot
 	# format the run.sh file
