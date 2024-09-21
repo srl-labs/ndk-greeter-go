@@ -2,6 +2,7 @@ package greeter
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // ConfigState holds the application configuration and state.
@@ -45,7 +46,7 @@ func (a *App) processConfig() {
 
 	// --8<-- [start:greeting-msg].
 	a.configState.Greeting = "👋 Hi " + a.configState.Name +
-		", SR Linux was last booted " + uptime + " ago!"
+		fmt.Sprintf(", I am SR Linux and my uptime is %s!", uptime)
 	// --8<-- [end:greeting-msg].
 }
 
