@@ -5,6 +5,7 @@ package greeter
 
 import (
 	"context"
+	"time"
 
 	"github.com/openconfig/gnmic/pkg/api"
 	"github.com/rs/zerolog"
@@ -71,20 +72,32 @@ func (a *App) Start(ctx context.Context) {
 // getUpTime retrieves the uptime from the system using gNMI.
 // --8<-- [start:get-uptime].
 func (a *App) getUptime() (string, error) {
-	a.logger.Info().Msg("Fetching SR Linux uptime value")
+	a.logger.Info().Msg("Fetching SR Linux last-booted time value")
 
 	// create a GetRequest
 	getReq, err := bond.NewGetRequest("/system/information/last-booted", api.EncodingPROTO())
 	if err != nil {
 		return "", err
 	}
+
 	getResp, err := a.NDKAgent.GetWithGNMI(getReq)
 	if err != nil {
 		return "", err
 	}
+
 	a.logger.Info().Msgf("GetResponse: %+v", getResp)
 
-	return getResp.GetNotification()[0].GetUpdate()[0].GetVal().GetStringVal(), nil
+	bootTimeStr := getResp.GetNotification()[0].GetUpdate()[0].GetVal().GetStringVal()
+
+	bootTime, err := time.Parse(time.RFC3339Nano, bootTimeStr)
+	if err != nil {
+		return "", err
+	}
+
+	currentTime := time.Now()
+	uptime := currentTime.Sub(bootTime).Round(time.Second)
+
+	return uptime.String(), nil
 }
 
 // --8<-- [end:get-uptime].

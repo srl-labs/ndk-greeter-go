@@ -45,7 +45,7 @@ func (a *App) processConfig() {
 
 	// --8<-- [start:greeting-msg].
 	a.configState.Greeting = "👋 Hi " + a.configState.Name +
-		", SR Linux was last booted at " + uptime
+		", SR Linux was last booted " + uptime + " ago!"
 	// --8<-- [end:greeting-msg].
 }
 
