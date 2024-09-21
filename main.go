@@ -10,14 +10,12 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/signal"
-	"syscall"
 
 	syslog "github.com/RackSec/srslog"
 
 	"github.com/rs/zerolog"
+	"github.com/srl-labs/bond"
 	"github.com/srl-labs/ndk-greeter-go/greeter"
-	"google.golang.org/grpc/metadata"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -46,33 +44,35 @@ func main() {
 	// --8<-- [start:metadata]
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	ctx = metadata.AppendToOutgoingContext(ctx, "agent_name", greeter.AppName)
 	// --8<-- [end:metadata]
 
-	exitHandler(cancel)
+	// --8<-- [start:main-init-bond-agent]
+	opts := []bond.Option{
+		bond.WithLogger(&logger),
+		bond.WithContext(ctx, cancel),
+		bond.WithAppRootPath(greeter.AppRoot),
+	}
+
+	agent, errs := bond.NewAgent(greeter.AppName, opts...)
+	for _, err := range errs {
+		if err != nil {
+			logger.Fatal().Err(err).Msg("Failed to create agent")
+		}
+	}
+
+	err := agent.Start()
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to start agent")
+	}
+	// --8<-- [end:main-init-bond-agent]
 
 	// --8<-- [start:main-init-app]
-	app := greeter.NewApp(ctx, &logger)
+	app := greeter.New(&logger, agent)
 	app.Start(ctx)
 	// --8<-- [end:main-init-app]
 }
 
 // --8<-- [end:main]
-
-// ExitHandler cancels the main context when interrupt or term signals are sent.
-// --8<-- [start:exit-handler].
-func exitHandler(cancel context.CancelFunc) {
-	// handle CTRL-C signal
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-sig
-
-		cancel()
-	}()
-}
-
-// --8<-- [end:exit-handler]
 
 // setupLogger creates a logger instance.
 // --8<-- [start:setup-logger].
@@ -95,9 +95,11 @@ func setupLogger() zerolog.Logger {
 		writers = append(writers, consoleLogger)
 	}
 
+	const logFile = "/var/log/greeter/greeter.log"
+
 	// A lumberjack logger with rotation settings.
 	fileLogger := &lumberjack.Logger{
-		Filename:   "/var/log/greeter/greeter.log",
+		Filename:   logFile,
 		MaxSize:    2, // megabytes
 		MaxBackups: 3,
 		MaxAge:     28, // days

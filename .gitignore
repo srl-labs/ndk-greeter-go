@@ -37,3 +37,6 @@ build
 debug/apt.log
 # hard-linked dlv binary
 debug/dlv
+
+# go workspaces
+go.work*

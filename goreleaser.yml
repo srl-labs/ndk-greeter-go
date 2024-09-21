@@ -1,0 +1,66 @@
+version: 2
+project_name: greeter
+builds:
+  - id: bin
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}}
+    gcflags:
+      - all=-N -l
+    goos:
+      - linux
+    goarch:
+      - amd64
+
+upx:
+  - enabled: true
+    compress: best
+
+archives:
+  - name_template: '{{ .ProjectName }}_{{ replace .Version "v" "" }}_{{ .Os }}_{{ .Arch }}'
+    files:
+      - yang/**/*
+      - "{{ .ProjectName }}.yml"
+
+checksum:
+  name_template: checksums.txt
+
+snapshot:
+  version_template: "{{ .Tag }}-next"
+
+publishers:
+  - name: fury.io deb/rpm packages
+    ids:
+      - greeter-nfpms # this id belongs to nfpm section and is used to only upload artifacts from nfpm
+    dir: "{{ dir .ArtifactPath }}"
+    cmd: curl -F package=@{{ .ArtifactName }} https://{{ .Env.FURY_TOKEN }}@push.fury.io/srlinux/
+
+release:
+  prerelease: auto
+
+changelog:
+  use: github-native
+
+nfpms:
+  - id: greeter-nfpms
+    file_name_template: '{{ .ProjectName }}_{{ replace .Version "v" "" }}_{{ .Os }}_{{ .Arch }}'
+    package_name: ndk-{{ .ProjectName }}-go
+    maintainer: Roman Dodin <dodin.roman@gmail.com>
+    homepage: https://learn.srlinux.dev
+    description: |
+      Greeter NDK app
+    vendor: Nokia
+    license: GNU GPLv3
+    formats:
+      - deb
+    scripts:
+      postinstall: postinstall.sh
+    bindir: /usr/local/bin
+    contents:
+      - src: ./yang
+        dst: /opt/{{ .ProjectName }}/yang
+      - src: ./{{ .ProjectName }}.yml
+        dst: /etc/opt/srlinux/appmgr/
