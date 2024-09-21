@@ -91,7 +91,7 @@ function build-app {
 	if [[ -n "${NDK_DEBUG}" ]]; then
 		go build -race -o ${BINARY} -ldflags="${LDFLAGS}" -gcflags="${GCFLAGS}" .
 	else
-		go build -o ${BINARY} -ldflags="${LDFLAGS}" -gcflags="${GCFLAGS}" .
+		go build -race -o ${BINARY} -ldflags="${LDFLAGS}" -gcflags="${GCFLAGS}" .
 	fi
 }
 
