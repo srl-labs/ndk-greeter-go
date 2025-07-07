@@ -20,6 +20,9 @@ GOIMPORTS_FLAGS="-w ."
 
 COMMON_LDFLAGS="-X main.version=dev -X main.commit=$(git rev-parse --short HEAD)"
 
+GOMPLATE_IMAGE="ghcr.io/hairyhenderson/gomplate:v4.3-alpine"
+YANGLINT_IMAGE="ghcr.io/hellt/yanglint:3.7.8"
+
 if [ -z "$NDK_DEBUG" ]; then
 	# when not in debug mode use linker flags -s -w to strip the binary
 	LDFLAGS="-s -w $COMMON_LDFLAGS\""
@@ -38,7 +41,7 @@ fi
 #################################
 function lint-yang {
 	echo "Linting YANG files"
-	docker run --rm -v ${BASE_DIR}:/work ghcr.io/hellt/yanglint yang/*.yang
+	docker run --rm -v ${BASE_DIR}:/work ${YANGLINT_IMAGE} yang/*.yang
 }
 
 function lint-yaml {
@@ -91,7 +94,7 @@ function build-app {
 	if [[ -n "${NDK_DEBUG}" ]]; then
 		go build -race -o ${BINARY} -ldflags="${LDFLAGS}" -gcflags="${GCFLAGS}" .
 	else
-		go build -race -o ${BINARY} -ldflags="${LDFLAGS}" -gcflags="${GCFLAGS}" .
+		go build -o ${BINARY} -ldflags="${LDFLAGS}" -gcflags="${GCFLAGS}" .
 	fi
 }
 
@@ -132,18 +135,19 @@ function template-files {
 function deploy-lab {
 	mkdir -p logs/srl
 	mkdir -p logs/greeter
-	sudo clab dep -c -t ${LABDIR}
+	containerlab deploy -c -t ${LABDIR}
 }
 
 function destroy-lab {
-	sudo clab des -c -t ${LABDIR}/${LABFILE}
+	containerlab destroy -c -t ${LABDIR}/${LABFILE}
 	sudo rm -rf logs/srl/* logs/greeter/*
 }
 
 function check-clab-version {
 	version=$(clab version | awk '/version:/ {print $2}')
-	if [[ $(echo "$version 0.48.6" | tr " " "\n" | sort -V | head -n 1) != "0.48.6" ]]; then
-		echo "Upgrade containerlab to v0.48.6 or newer
+	required_version="0.68.0"
+	if [[ $(echo "$version $required_version" | tr " " "\n" | sort -V | head -n 1) != "$required_version" ]]; then
+		echo "Upgrade containerlab to v$required_version or newer
         Run 'sudo containerlab version upgrade' or use other installation options - https://containerlab.dev/install"
 		exit 1
 	fi
@@ -154,7 +158,7 @@ function check-clab-version {
 function template-lab {
 	echo "Templating lab file"
 	sudo docker run --rm -e NDK_DEBUG=${NDK_DEBUG} -v ${BASE_DIR}/lab/:/tmp/ \
-		hairyhenderson/gomplate:v3.11-slim \
+		${GOMPLATE_IMAGE} \
 		--file /tmp/${LABFILE}.go.tpl -o /tmp/${LABFILE}
 }
 
@@ -168,7 +172,7 @@ function template-app {
 	echo "Templating app file"
 	sudo docker run --rm -e NDK_DEBUG=${NDK_DEBUG} -e NOWAIT=${NOWAIT} \
 		-v ${BASE_DIR}:/tmp \
-		hairyhenderson/gomplate:v3.11-slim \
+		${GOMPLATE_IMAGE} \
 		--file /tmp/${APPNAME}.yml.go.tpl -o /tmp/${APPNAME}.yml
 }
 
@@ -183,23 +187,23 @@ function install-app {
 }
 
 function show-app-status {
-	sudo clab exec --label containerlab=greeter --cmd "sr_cli show system application ${APPNAME}"
+	clab exec --label containerlab=greeter --cmd "sr_cli show system application ${APPNAME}"
 }
 
 function restart-app {
-	sudo clab exec --label containerlab=greeter --cmd "sr_cli tools system app-management application ${APPNAME} restart"
+	clab exec --label containerlab=greeter --cmd "sr_cli tools system app-management application ${APPNAME} restart"
 }
 
 function reload-app {
-	sudo clab exec --label containerlab=greeter --cmd "sr_cli tools system app-management application ${APPNAME} reload"
+	clab exec --label containerlab=greeter --cmd "sr_cli tools system app-management application ${APPNAME} reload"
 }
 
 function stop-app {
-	sudo clab exec --label containerlab=greeter --cmd "sr_cli tools system app-management application ${APPNAME} stop"
+	clab exec --label containerlab=greeter --cmd "sr_cli tools system app-management application ${APPNAME} stop"
 }
 
 function start-app {
-	sudo clab exec --label containerlab=greeter --cmd "sr_cli tools system app-management application ${APPNAME} start"
+	clab exec --label containerlab=greeter --cmd "sr_cli tools system app-management application ${APPNAME} start"
 }
 
 function redeploy-app {
@@ -208,12 +212,12 @@ function redeploy-app {
 }
 
 function create-app-symlink {
-	sudo clab exec --label containerlab=greeter --cmd "sudo ln -s /tmp/build/${APPNAME} /usr/local/bin/${APPNAME}"
-	sudo clab exec --label containerlab=greeter --cmd "sudo ln -s /tmp/${APPNAME}.yml /etc/opt/srlinux/appmgr/${APPNAME}.yml"
+	clab exec --label containerlab=greeter --cmd "sudo ln -s /tmp/build/${APPNAME} /usr/local/bin/${APPNAME}"
+	clab exec --label containerlab=greeter --cmd "sudo ln -s /tmp/${APPNAME}.yml /etc/opt/srlinux/appmgr/${APPNAME}.yml"
 }
 
 function reload-app_mgr {
-	sudo clab exec --label containerlab=greeter --cmd "sr_cli tools system app-management application app_mgr reload"
+	clab exec --label containerlab=greeter --cmd "sr_cli tools system app-management application app_mgr reload"
 }
 
 #################################
