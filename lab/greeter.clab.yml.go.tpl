@@ -5,7 +5,7 @@ topology:
   nodes:
     greeter:
       kind: nokia_srlinux
-      image: ghcr.io/nokia/srlinux:25.3
+      image: ghcr.io/nokia/srlinux:25.10
       exec:
         - touch /tmp/.ndk-dev-mode
         {{- if ne (env.Getenv "NDK_DEBUG") "" }}
